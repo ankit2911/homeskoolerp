@@ -15,13 +15,12 @@ export const authConfig = {
                 if (isLoggedIn) return true;
                 return false; // Redirect unauthenticated users to login page
             } else if (isLoggedIn) {
-                // If user is already logged in and tries to access login page, 
-                // redirect them to their respective dashboard? 
-                // For now, allow access or redirect to proper dashboard if visiting root
                 if (nextUrl.pathname === '/login' || nextUrl.pathname === '/') {
-                    // Logic to redirect based on role would be here, but we can't access role easily in edge middleware yet 
-                    // without session strategy or decoding token. 
-                    // We'll keep it simple: allow for now, handle in page.
+                    const role = (auth.user as any).role;
+                    if (role === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl));
+                    if (role === 'TEACHER') return Response.redirect(new URL('/teacher', nextUrl));
+                    if (role === 'STUDENT') return Response.redirect(new URL('/student', nextUrl));
+                    return Response.redirect(new URL('/student', nextUrl)); // Fallback
                 }
             }
             return true;
@@ -29,13 +28,13 @@ export const authConfig = {
         // Add jwt callback to persist role
         async jwt({ token, user }) {
             if (user) {
-                token.role = (user as any).role;
+                token.role = user.role;
             }
             return token;
         },
         async session({ session, token }) {
             if (token && session.user) {
-                (session.user as any).role = token.role;
+                session.user.role = token.role;
             }
             return session;
         }
