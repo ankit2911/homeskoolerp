@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Model (Base for implementation of Auth)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String?
+  role      String   @default("STUDENT") // ADMIN, TEACHER, STUDENT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Profile Relations
+  studentProfile StudentProfile?
+  teacherProfile TeacherProfile?
+}
+
+// Student Specific Data
+model StudentProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classId     String?
+  class       Class?   @relation(fields: [classId], references: [id])
+  parentPhone String?
+  
+  attendance  Attendance[]
+}
+
+// Teacher Specific Data
+model TeacherProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  allocations TeacherAllocation[]
+}
+
+// School Structure
+model Board {
+  id      String  @id @default(cuid())
+  name    String  @unique // e.g. CBSE, ICSE
+  classes Class[]
+}
+
+model Class {
+  id        String    @id @default(cuid())
+  name      String    // e.g. "Class 10"
+  section   String?   // e.g. "A"
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id])
+  
+  students  StudentProfile[]
+  subjects  Subject[]
+  allocations TeacherAllocation[]
+  sessions    Session[]
+}
+
+model Subject {
+  id        String    @id @default(cuid())
+  name      String    // e.g. "Mathematics"
+  classId   String
+  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  allocations TeacherAllocation[]
+  sessions    Session[]
+}
+
+// Mapping Teacher -> Class -> Subject
+model TeacherAllocation {
+  id        String         @id @default(cuid())
+  teacherId String
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classId   String
+  class     Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, classId, subjectId])
+}
+
+// Session / Calendar
+model Session {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id])
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  
+  attendance  Attendance[]
+}
+
+model Attendance {
+  id          String         @id @default(cuid())
+  date        DateTime       @default(now())
+  status      String         // PRESENT, ABSENT, LATE
+  
+  sessionId   String
+  session     Session        @relation(fields: [sessionId], references: [id])
+  studentId   String
+  student     StudentProfile @relation(fields: [studentId], references: [id])
+}
