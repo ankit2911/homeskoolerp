@@ -12,7 +12,9 @@ const sidebarItems = [
     { href: '/admin/subjects', label: 'Subjects', icon: BookOpen },
     { href: '/admin/teachers', label: 'Teachers', icon: Users },
     { href: '/admin/students', label: 'Students', icon: GraduationCap },
+    { href: '/admin/allocations', label: 'Allocations', icon: BookOpen },
     { href: '/admin/sessions', label: 'Sessions', icon: Calendar },
+    { href: '/admin/curriculum', label: 'Curriculum', icon: BookOpen },
 ];
 
 export function AdminSidebar({ className }: { className?: string }) {
