@@ -74,6 +74,24 @@ model Subject {
   allocations TeacherAllocation[]
   sessions    Session[]
   resources   Resource[]
+  chapters    Chapter[]
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  name      String
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topics    Topic[]
+  sessions  Session[]
+}
+
+model Topic {
+  id        String   @id @default(cuid())
+  name      String
+  chapterId String
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  sessions  Session[]
 }
 
 // Mapping Teacher -> Class -> Subject
@@ -102,6 +120,11 @@ model Session {
   class       Class    @relation(fields: [classId], references: [id])
   subjectId   String
   subject     Subject  @relation(fields: [subjectId], references: [id])
+
+  chapterId   String?
+  chapter     Chapter? @relation(fields: [chapterId], references: [id])
+  topicId     String?
+  topic       Topic?   @relation(fields: [topicId], references: [id])
   
   attendance  Attendance[]
 }

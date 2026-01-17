@@ -32,6 +32,29 @@ export async function createTeacher(formData: FormData) {
     }
 }
 
+
+export async function updateTeacher(formData: FormData) {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+
+    if (!id || !name || !email) return { error: 'ID, Name and Email are required' };
+
+    try {
+        await db.user.update({
+            where: { id },
+            data: {
+                name,
+                email
+            },
+        });
+        revalidatePath('/admin/teachers');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update teacher.' };
+    }
+}
+
 export async function deleteTeacher(id: string) {
     try {
         await db.user.delete({ where: { id } });

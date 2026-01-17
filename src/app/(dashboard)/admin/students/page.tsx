@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { createStudent, deleteStudent } from '@/lib/actions/student';
+import { createStudent, updateStudent, deleteStudent } from '@/lib/actions/student';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,8 +19,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { DeleteConfirm } from '@/components/admin/delete-confirm';
 
 export default async function StudentsPage() {
     const students = await db.user.findMany({
@@ -102,7 +103,7 @@ export default async function StudentsPage() {
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Email</TableHead>
-                            <TableHead>Class</TableHead>
+                            <TableHead>Class (Section)</TableHead>
                             <TableHead>Board</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -119,15 +120,61 @@ export default async function StudentsPage() {
                             <TableRow key={student.id}>
                                 <TableCell className="font-medium">{student.name}</TableCell>
                                 <TableCell>{student.email}</TableCell>
-                                <TableCell>{student.studentProfile?.class?.name || '-'}</TableCell>
+                                <TableCell>{student.studentProfile?.class?.name} {student.studentProfile?.class?.section ? `(${student.studentProfile?.class?.section})` : ''}</TableCell>
                                 <TableCell>{student.studentProfile?.class?.board?.name || '-'}</TableCell>
-                                <TableCell className="text-right">
-                                    <form action={async () => {
+                                <TableCell className="text-right flex items-center justify-end gap-2">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="icon"><Edit2 className="h-4 w-4 text-blue-500" /></Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Student</DialogTitle>
+                                            </DialogHeader>
+                                            <form action={async (formData) => {
+                                                'use server';
+                                                await updateStudent(formData);
+                                            }}>
+                                                <input type="hidden" name="id" value={student.id} />
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid gap-2">
+                                                        <Label>Name</Label>
+                                                        <Input name="name" defaultValue={student.name || ''} required />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Email</Label>
+                                                        <Input name="email" type="email" defaultValue={student.email} required />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Class</Label>
+                                                        <Select name="classId" defaultValue={student.studentProfile?.classId || ''} required>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select Class" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {classes.map(c => (
+                                                                    <SelectItem key={c.id} value={c.id}>
+                                                                        {c.name} {c.section ? `(${c.section})` : ''} - {c.board.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Parent Phone</Label>
+                                                        <Input name="parentPhone" defaultValue={student.studentProfile?.parentPhone || ''} />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button type="submit">Update</Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <DeleteConfirm onDelete={async () => {
                                         'use server';
-                                        await deleteStudent(student.id);
-                                    }}>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"><Trash className="h-4 w-4" /></Button>
-                                    </form>
+                                        return await deleteStudent(student.id);
+                                    }} />
                                 </TableCell>
                             </TableRow>
                         ))}

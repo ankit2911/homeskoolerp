@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { createTeacher, deleteTeacher } from '@/lib/actions/teacher';
+import { createTeacher, updateTeacher, deleteTeacher } from '@/lib/actions/teacher';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,8 +12,9 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { DeleteConfirm } from '@/components/admin/delete-confirm';
 
 export default async function TeachersPage() {
     const teachers = await db.user.findMany({
@@ -83,13 +84,40 @@ export default async function TeachersPage() {
                             <TableRow key={teacher.id}>
                                 <TableCell className="font-medium">{teacher.name}</TableCell>
                                 <TableCell>{teacher.email}</TableCell>
-                                <TableCell className="text-right">
-                                    <form action={async () => {
+                                <TableCell className="text-right flex items-center justify-end gap-2">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="icon"><Edit2 className="h-4 w-4 text-blue-500" /></Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Teacher</DialogTitle>
+                                            </DialogHeader>
+                                            <form action={async (formData) => {
+                                                'use server';
+                                                await updateTeacher(formData);
+                                            }}>
+                                                <input type="hidden" name="id" value={teacher.id} />
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid gap-2">
+                                                        <Label>Name</Label>
+                                                        <Input name="name" defaultValue={teacher.name || ''} required />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Email</Label>
+                                                        <Input name="email" type="email" defaultValue={teacher.email} required />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button type="submit">Update</Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <DeleteConfirm onDelete={async () => {
                                         'use server';
-                                        await deleteTeacher(teacher.id);
-                                    }}>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"><Trash className="h-4 w-4" /></Button>
-                                    </form>
+                                        return await deleteTeacher(teacher.id);
+                                    }} />
                                 </TableCell>
                             </TableRow>
                         ))}

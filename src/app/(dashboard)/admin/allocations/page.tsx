@@ -18,8 +18,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { DeleteConfirm } from '@/components/admin/delete-confirm';
 
 export default async function AllocationsPage() {
     const allocations = await db.teacherAllocation.findMany({
@@ -89,7 +90,7 @@ export default async function AllocationsPage() {
                                         <SelectContent>
                                             {subjects.map(s => (
                                                 <SelectItem key={s.id} value={`${s.id}|${s.classId}`}>
-                                                    {s.name} - {s.class.name} ({s.class.board.name})
+                                                    {s.name} - {s.class.name} {s.class.section ? `(${s.class.section})` : ''} ({s.class.board.name})
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -110,7 +111,7 @@ export default async function AllocationsPage() {
                         <TableRow>
                             <TableHead>Teacher</TableHead>
                             <TableHead>Subject</TableHead>
-                            <TableHead>Class</TableHead>
+                            <TableHead>Class (Section)</TableHead>
                             <TableHead>Board</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -127,15 +128,13 @@ export default async function AllocationsPage() {
                             <TableRow key={alloc.id}>
                                 <TableCell className="font-medium">{alloc.teacher.user.name}</TableCell>
                                 <TableCell>{alloc.subject.name}</TableCell>
-                                <TableCell>{alloc.class.name}</TableCell>
+                                <TableCell>{alloc.class.name} {alloc.class.section ? `(${alloc.class.section})` : ''}</TableCell>
                                 <TableCell>{alloc.class.board.name}</TableCell>
                                 <TableCell className="text-right">
-                                    <form action={async () => {
+                                    <DeleteConfirm onDelete={async () => {
                                         'use server';
-                                        await deleteAllocation(alloc.id);
-                                    }}>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"><Trash className="h-4 w-4" /></Button>
-                                    </form>
+                                        return await deleteAllocation(alloc.id);
+                                    }} />
                                 </TableCell>
                             </TableRow>
                         ))}

@@ -36,6 +36,36 @@ export async function createStudent(formData: FormData) {
     }
 }
 
+
+export async function updateStudent(formData: FormData) {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const classId = formData.get('classId') as string;
+
+    if (!id || !name || !email || !classId) return { error: 'ID, Name, Email, and Class are required' };
+
+    try {
+        await db.user.update({
+            where: { id },
+            data: {
+                name,
+                email,
+                studentProfile: {
+                    update: {
+                        classId,
+                        parentPhone: formData.get('parentPhone') as string
+                    }
+                }
+            },
+        });
+        revalidatePath('/admin/students');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update student.' };
+    }
+}
+
 export async function deleteStudent(id: string) {
     try {
         await db.user.delete({ where: { id } });

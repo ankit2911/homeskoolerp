@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { createClass, deleteClass } from '@/lib/actions/class';
+import { createClass, updateClass, deleteClass } from '@/lib/actions/class';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,8 +19,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { DeleteConfirm } from '@/components/admin/delete-confirm';
 
 export default async function ClassesPage() {
     const classes = await db.class.findMany({
@@ -109,13 +110,54 @@ export default async function ClassesPage() {
                                 <TableCell>{cls.board.name}</TableCell>
                                 <TableCell>{cls._count.students}</TableCell>
                                 <TableCell>{cls._count.subjects}</TableCell>
-                                <TableCell className="text-right">
-                                    <form action={async () => {
+                                <TableCell className="text-right flex items-center justify-end gap-2">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="icon"><Edit2 className="h-4 w-4 text-blue-500" /></Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Class</DialogTitle>
+                                            </DialogHeader>
+                                            <form action={async (formData) => {
+                                                'use server';
+                                                await updateClass(formData);
+                                            }}>
+                                                <input type="hidden" name="id" value={cls.id} />
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid gap-2">
+                                                        <Label>Board</Label>
+                                                        <Select name="boardId" defaultValue={cls.boardId} required>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select Board" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {boards.map(b => (
+                                                                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Class Name</Label>
+                                                        <Input name="name" defaultValue={cls.name} required />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Section</Label>
+                                                        <Input name="section" defaultValue={cls.section || ''} />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button type="submit">Update</Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+
+                                    <DeleteConfirm onDelete={async () => {
                                         'use server';
-                                        await deleteClass(cls.id);
-                                    }}>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"><Trash className="h-4 w-4" /></Button>
-                                    </form>
+                                        return await deleteClass(cls.id);
+                                    }} />
                                 </TableCell>
                             </TableRow>
                         ))}

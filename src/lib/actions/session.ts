@@ -9,9 +9,11 @@ export async function createSession(formData: FormData) {
     const endTime = formData.get('endTime') as string;
     const classId = formData.get('classId') as string;
     const subjectId = formData.get('subjectId') as string;
+    const chapterId = formData.get('chapterId') as string || null;
+    const topicId = formData.get('topicId') as string || null;
 
     if (!title || !startTime || !endTime || !classId || !subjectId) {
-        return { error: 'All fields are required' };
+        return { error: 'All required fields are missing' };
     }
 
     try {
@@ -22,6 +24,8 @@ export async function createSession(formData: FormData) {
                 endTime: new Date(endTime),
                 classId,
                 subjectId,
+                chapterId: chapterId || undefined,
+                topicId: topicId || undefined,
                 status: 'SCHEDULED'
             },
             include: {
@@ -55,6 +59,10 @@ export async function updateSession(formData: FormData) {
     const startTime = formData.get('startTime') as string;
     const endTime = formData.get('endTime') as string;
     const status = formData.get('status') as string;
+    const classId = formData.get('classId') as string;
+    const subjectId = formData.get('subjectId') as string;
+    const chapterId = formData.get('chapterId') as string || null;
+    const topicId = formData.get('topicId') as string || null;
 
     try {
         await db.session.update({
@@ -63,7 +71,12 @@ export async function updateSession(formData: FormData) {
                 title,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
-                status
+                status,
+                // Make sure we can update these fields too
+                classId: classId || undefined,
+                subjectId: subjectId || undefined,
+                chapterId, // passing null creates disconnect if nullable
+                topicId
             }
         });
         revalidatePath('/admin/sessions');

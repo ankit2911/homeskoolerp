@@ -20,6 +20,26 @@ export async function createSubject(formData: FormData) {
     }
 }
 
+
+export async function updateSubject(formData: FormData) {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const classId = formData.get('classId') as string;
+
+    if (!id || !name || !classId) return { error: 'ID, Name and Class are required' };
+
+    try {
+        await db.subject.update({
+            where: { id },
+            data: { name, classId },
+        });
+        revalidatePath('/admin/subjects');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update subject.' };
+    }
+}
+
 export async function deleteSubject(id: string) {
     try {
         await db.subject.delete({ where: { id } });
