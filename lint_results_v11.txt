@@ -1,0 +1,126 @@
+
+> homeskoolerp@0.1.0 lint
+> eslint
+
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/app/(dashboard)/admin/configuration/page.tsx
+   2:10  warning  'createBoard' is defined but never used        @typescript-eslint/no-unused-vars
+   3:10  warning  'Button' is defined but never used             @typescript-eslint/no-unused-vars
+   4:10  warning  'Input' is defined but never used              @typescript-eslint/no-unused-vars
+   6:5   warning  'Dialog' is defined but never used             @typescript-eslint/no-unused-vars
+   7:5   warning  'DialogContent' is defined but never used      @typescript-eslint/no-unused-vars
+   8:5   warning  'DialogDescription' is defined but never used  @typescript-eslint/no-unused-vars
+   9:5   warning  'DialogFooter' is defined but never used       @typescript-eslint/no-unused-vars
+  10:5   warning  'DialogHeader' is defined but never used       @typescript-eslint/no-unused-vars
+  11:5   warning  'DialogTitle' is defined but never used        @typescript-eslint/no-unused-vars
+  12:5   warning  'DialogTrigger' is defined but never used      @typescript-eslint/no-unused-vars
+  14:10  warning  'Plus' is defined but never used               @typescript-eslint/no-unused-vars
+  15:10  warning  'Label' is defined but never used              @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/app/(dashboard)/admin/students/page.tsx
+  24:5  warning  'Filter' is defined but never used      @typescript-eslint/no-unused-vars
+  26:5  warning  'UserCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/auth.config.ts
+   8:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/admin-sidebar.tsx
+  6:27   warning  'Settings' is defined but never used        @typescript-eslint/no-unused-vars
+  6:100  warning  'PanelLeftClose' is defined but never used  @typescript-eslint/no-unused-vars
+  6:116  warning  'PanelLeftOpen' is defined but never used   @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/configuration-list.tsx
+   58:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/configuration-list.tsx:58:13
+  56 |     useEffect(() => {
+  57 |         if (initialAction) {
+> 58 |             setOpenDialog(initialAction);
+     |             ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  59 |         }
+  60 |     }, [initialAction]);
+  61 |  react-hooks/set-state-in-effect
+  236:38  error  'DialogTrigger' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/jsx-no-undef
+  257:38  error  'DialogTrigger' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/jsx-no-undef
+  314:54  error  'DialogTrigger' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/jsx-no-undef
+  342:54  error  'DialogTrigger' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/jsx-no-undef
+  378:66  error  'DialogTrigger' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/jsx-no-undef
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/configuration-tiles.tsx
+   4:10  warning  'Plus' is defined but never used          @typescript-eslint/no-unused-vars
+  10:11  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:56  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/session-dialogs.tsx
+  13:20  warning  'Edit2' is defined but never used         @typescript-eslint/no-unused-vars
+  16:61  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:68  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:84  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/session-form.tsx
+  30:15  error    Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+  45:11  warning  The 'subjects' logical expression could make the dependencies of useMemo Hook (at line 47) change on every render. To fix this, wrap the initialization of 'subjects' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  48:11  warning  The 'chapters' logical expression could make the dependencies of useMemo Hook (at line 50) change on every render. To fix this, wrap the initialization of 'chapters' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/syllabus-client.tsx
+   3:10  warning  'useState' is defined but never used                        @typescript-eslint/no-unused-vars
+  40:11  warning  'handleStopPropagation' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/allocation.ts
+  23:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  33:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/board.ts
+  17:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  36:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  46:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/class.ts
+  65:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  76:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/curriculum.ts
+  18:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  36:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  46:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  63:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  81:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  91:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/resources.ts
+  42:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  73:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  83:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/session.ts
+  84:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  94:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/student.ts
+  34:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  64:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  74:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/subject.ts
+  29:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  50:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  61:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/teacher.ts
+   52:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  100:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  110:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/types/next-auth.d.ts
+  1:8   warning  'NextAuth' is defined but never used  @typescript-eslint/no-unused-vars
+  2:10  warning  'JWT' is defined but never used       @typescript-eslint/no-unused-vars
+
+✖ 66 problems (14 errors, 52 warnings)
+

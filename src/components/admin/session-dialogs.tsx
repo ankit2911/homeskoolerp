@@ -35,7 +35,7 @@ export function CreateSessionDialog({ classes }: { classes: any[] }) {
     );
 }
 
-export function EditSessionDialog({ classes, session }: { classes: any[], session: any }) {
+export function EditSessionDialog({ classes, session }: { classes: any[]; session: any }) {
     const [open, setOpen] = useState(false);
 
     return (

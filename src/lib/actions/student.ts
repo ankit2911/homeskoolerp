@@ -5,26 +5,49 @@ import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 
 export async function createStudent(formData: FormData) {
-    const name = formData.get('name') as string;
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const classId = formData.get('classId') as string;
 
-    if (!name || !email || !password || !classId) return { error: 'All fields are required' };
+    const rollNumber = formData.get('rollNumber') as string;
+    const dateOfBirth = formData.get('dateOfBirth') ? new Date(formData.get('dateOfBirth') as string) : null;
+    const gender = formData.get('gender') as string;
+    const fatherName = formData.get('fatherName') as string;
+    const motherName = formData.get('motherName') as string;
+    const emergencyContact = formData.get('emergencyContact') as string;
+    const parentPhone = formData.get('parentPhone') as string;
+    const address = formData.get('address') as string;
+    const previousSchool = formData.get('previousSchool') as string;
+    const academicYear = (formData.get('academicYear') as string) || '2025-26';
+
+    if (!firstName || !email || !password || !classId) return { error: 'Required fields are missing' };
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await db.user.create({
             data: {
-                name,
+                name: `${firstName} ${lastName}`.trim(),
                 email,
                 password: hashedPassword,
                 role: 'STUDENT',
                 studentProfile: {
                     create: {
-                        classId,
-                        parentPhone: formData.get('parentPhone') as string
+                        firstName,
+                        lastName,
+                        rollNumber,
+                        dateOfBirth,
+                        gender,
+                        fatherName,
+                        motherName,
+                        emergencyContact,
+                        parentPhone,
+                        address,
+                        previousSchool,
+                        academicYear,
+                        classId
                     }
                 }
             },
@@ -32,29 +55,53 @@ export async function createStudent(formData: FormData) {
         revalidatePath('/admin/students');
         return { success: true };
     } catch (error) {
-        return { error: 'Failed to create student. Email might already exist.' };
+        console.error('Failed to create student:', error);
+        return { error: 'Failed to create student. Email or Roll Number might already exist.' };
     }
 }
 
 
 export async function updateStudent(formData: FormData) {
     const id = formData.get('id') as string;
-    const name = formData.get('name') as string;
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
     const email = formData.get('email') as string;
     const classId = formData.get('classId') as string;
 
-    if (!id || !name || !email || !classId) return { error: 'ID, Name, Email, and Class are required' };
+    const rollNumber = formData.get('rollNumber') as string;
+    const dateOfBirth = formData.get('dateOfBirth') ? new Date(formData.get('dateOfBirth') as string) : null;
+    const gender = formData.get('gender') as string;
+    const fatherName = formData.get('fatherName') as string;
+    const motherName = formData.get('motherName') as string;
+    const emergencyContact = formData.get('emergencyContact') as string;
+    const parentPhone = formData.get('parentPhone') as string;
+    const address = formData.get('address') as string;
+    const previousSchool = formData.get('previousSchool') as string;
+    const academicYear = (formData.get('academicYear') as string) || '2025-26';
+
+    if (!id || !firstName || !email || !classId) return { error: 'ID, Name, Email, and Class are required' };
 
     try {
         await db.user.update({
             where: { id },
             data: {
-                name,
+                name: `${firstName} ${lastName}`.trim(),
                 email,
                 studentProfile: {
                     update: {
-                        classId,
-                        parentPhone: formData.get('parentPhone') as string
+                        firstName,
+                        lastName,
+                        rollNumber,
+                        dateOfBirth,
+                        gender,
+                        fatherName,
+                        motherName,
+                        emergencyContact,
+                        parentPhone,
+                        address,
+                        previousSchool,
+                        academicYear,
+                        classId
                     }
                 }
             },
@@ -62,6 +109,7 @@ export async function updateStudent(formData: FormData) {
         revalidatePath('/admin/students');
         return { success: true };
     } catch (error) {
+        console.error('Failed to update student:', error);
         return { error: 'Failed to update student.' };
     }
 }

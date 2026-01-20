@@ -6,14 +6,25 @@ import { revalidatePath } from 'next/cache';
 export async function createSubject(formData: FormData) {
     const name = formData.get('name') as string;
     const classId = formData.get('classId') as string;
+    const classIds = formData.getAll('classIds') as string[];
 
-    if (!name || !classId) return { error: 'Name and Class are required' };
+    if (!name) return { error: 'Name is required' };
 
     try {
-        await db.subject.create({
-            data: { name, classId },
-        });
-        revalidatePath('/admin/subjects');
+        if (classIds && classIds.length > 0) {
+            await db.subject.createMany({
+                data: classIds.map(id => ({ name, classId: id })),
+            });
+        } else if (classId) {
+            await db.subject.create({
+                data: { name, classId },
+            });
+        } else {
+            return { error: 'Class is required' };
+        }
+
+        revalidatePath('/admin/configuration');
+        revalidatePath('/admin/curriculum');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to create subject.' };
@@ -33,7 +44,8 @@ export async function updateSubject(formData: FormData) {
             where: { id },
             data: { name, classId },
         });
-        revalidatePath('/admin/subjects');
+        revalidatePath('/admin/configuration');
+        revalidatePath('/admin/curriculum');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to update subject.' };
@@ -44,6 +56,7 @@ export async function deleteSubject(id: string) {
     try {
         await db.subject.delete({ where: { id } });
         revalidatePath('/admin/subjects');
+        revalidatePath('/admin/configuration');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to delete subject.' };

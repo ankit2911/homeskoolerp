@@ -12,7 +12,7 @@ export async function createBoard(formData: FormData) {
         await db.board.create({
             data: { name },
         });
-        revalidatePath('/admin/boards');
+        revalidatePath('/admin/configuration');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to create board. It might already exist.' };
@@ -31,7 +31,7 @@ export async function updateBoard(formData: FormData) {
             where: { id },
             data: { name },
         });
-        revalidatePath('/admin/boards');
+        revalidatePath('/admin/configuration');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to update board.' };
@@ -41,7 +41,7 @@ export async function updateBoard(formData: FormData) {
 export async function deleteBoard(id: string) {
     try {
         await db.board.delete({ where: { id } });
-        revalidatePath('/admin/boards');
+        revalidatePath('/admin/configuration');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to delete board.' };

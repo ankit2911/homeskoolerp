@@ -7,20 +7,36 @@ export async function createClass(formData: FormData) {
     const name = formData.get('name') as string;
     const section = formData.get('section') as string;
     const boardId = formData.get('boardId') as string;
+    const subjectsString = formData.get('subjects') as string;
 
     if (!name || !boardId) return { error: 'Name and Board are required' };
 
     try {
-        await db.class.create({
+        const newClass = await db.class.create({
             data: {
                 name,
                 section: section || undefined,
                 boardId
             },
         });
-        revalidatePath('/admin/classes');
+
+        if (subjectsString) {
+            const subjects = subjectsString.split(',').map(s => s.trim()).filter(Boolean);
+            if (subjects.length > 0) {
+                await db.subject.createMany({
+                    data: subjects.map(s => ({
+                        name: s,
+                        classId: newClass.id
+                    }))
+                });
+            }
+        }
+
+        revalidatePath('/admin/configuration');
+        revalidatePath('/admin/curriculum');
         return { success: true };
     } catch (error) {
+        console.error(error);
         return { error: 'Failed to create class.' };
     }
 }
@@ -43,7 +59,8 @@ export async function updateClass(formData: FormData) {
                 boardId
             },
         });
-        revalidatePath('/admin/classes');
+        revalidatePath('/admin/configuration');
+        revalidatePath('/admin/curriculum');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to update class.' };
@@ -53,7 +70,8 @@ export async function updateClass(formData: FormData) {
 export async function deleteClass(id: string) {
     try {
         await db.class.delete({ where: { id } });
-        revalidatePath('/admin/classes');
+        revalidatePath('/admin/configuration');
+        revalidatePath('/admin/curriculum');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to delete class.' };

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Settings, BookOpen, Users, GraduationCap, Calendar, FileText } from 'lucide-react';
+import { LayoutDashboard, Settings, BookOpen, Users, GraduationCap, Calendar, FileText, Settings2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { useSidebar } from './sidebar-provider';
 
 const sidebarGroups = [
     {
@@ -15,9 +16,7 @@ const sidebarGroups = [
     {
         label: 'Academic',
         items: [
-            { href: '/admin/boards', label: 'Boards', icon: Settings },
-            { href: '/admin/classes', label: 'Classes', icon: BookOpen },
-            { href: '/admin/subjects', label: 'Subjects', icon: BookOpen },
+            { href: '/admin/configuration', label: 'Academic Config', icon: Settings2 },
             { href: '/admin/curriculum', label: 'Curriculum', icon: BookOpen },
             { href: '/admin/resources', label: 'Resources', icon: FileText },
         ]
@@ -40,39 +39,56 @@ const sidebarGroups = [
 
 export function AdminSidebar({ className }: { className?: string }) {
     const pathname = usePathname();
+    const { isCollapsed } = useSidebar();
 
     return (
-        <div className={cn("pb-12 min-h-screen border-r bg-sidebar hidden md:block w-64 shadow-sm", className)}>
-            <div className="space-y-4 py-4">
-                <div className="px-6 py-4 flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+        <div className={cn(
+            "pb-8 min-h-screen border-r bg-card hidden md:block transition-all duration-300 ease-in-out shadow-elevation-1",
+            isCollapsed ? "w-16" : "w-52",
+            className
+        )}>
+            <div className="space-y-2 py-2">
+                <div className={cn(
+                    "px-4 py-3 flex items-center gap-2 overflow-hidden whitespace-nowrap",
+                    isCollapsed && "justify-center px-0"
+                )}>
+                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
                         HS
                     </div>
-                    <h2 className="text-xl font-bold tracking-tight text-sidebar-foreground">
-                        Homeskool
-                    </h2>
+                    {!isCollapsed && (
+                        <h2 className="text-xl font-semibold tracking-tight text-foreground font-heading">
+                            Homeskool
+                        </h2>
+                    )}
                 </div>
-                <div className="px-3 py-2">
-                    <div className="space-y-6">
+                <div className="px-2 py-1">
+                    <div className="space-y-4">
                         {sidebarGroups.map((group) => (
-                            <div key={group.label} className="px-3">
-                                <h3 className="mb-2 px-4 text-xs font-semibold text-muted-foreground/70 tracking-wider uppercase">
-                                    {group.label}
-                                </h3>
+                            <div key={group.label} className={cn("px-3", isCollapsed && "px-0")}>
+                                {!isCollapsed && (
+                                    <h3 className="mb-2 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-inter">
+                                        {group.label}
+                                    </h3>
+                                )}
                                 <div className="space-y-1">
                                     {group.items.map((item) => (
                                         <Link
                                             key={item.href}
                                             href={item.href}
                                             className={cn(
-                                                "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                                                "flex items-center rounded-lg transition-base group",
+                                                isCollapsed ? "justify-center p-2 mx-2" : "px-3 py-1.5 text-xs font-medium",
                                                 pathname === item.href
-                                                    ? "bg-sidebar-accent text-primary shadow-sm"
-                                                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                                                    ? "bg-primary/10 text-primary shadow-sm"
+                                                    : "text-foreground/70 hover:bg-muted hover:text-foreground"
                                             )}
                                         >
-                                            <item.icon className={cn("mr-3 h-4 w-4", pathname === item.href ? "text-primary" : "text-muted-foreground")} />
-                                            {item.label}
+                                            <item.icon className={cn(
+                                                "h-4 w-4 transition-all duration-200",
+                                                !isCollapsed && "mr-3",
+                                                pathname === item.href ? "text-primary fill-primary/20" : "text-muted-foreground group-hover:fill-muted-foreground/10"
+                                            )} strokeWidth={2.5} />
+                                            {!isCollapsed && item.label}
                                         </Link>
                                     ))}
                                 </div>

@@ -1,0 +1,123 @@
+
+> homeskoolerp@0.1.0 lint
+> eslint
+
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/app/(dashboard)/admin/page.tsx
+   6:5    warning  'Settings' is defined but never used                             @typescript-eslint/no-unused-vars
+   6:31   warning  'ClipboardList' is defined but never used                        @typescript-eslint/no-unused-vars
+  13:11   warning  'session' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+  61:103  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  61:110  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/app/(dashboard)/admin/students/page.tsx
+  22:24  warning  'Filter' is defined but never used       @typescript-eslint/no-unused-vars
+  22:43  warning  'Trash2' is defined but never used       @typescript-eslint/no-unused-vars
+  22:51  warning  'UserPlus' is defined but never used     @typescript-eslint/no-unused-vars
+  22:81  warning  'FileText' is defined but never used     @typescript-eslint/no-unused-vars
+  25:34  warning  'AvatarImage' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/app/(dashboard)/admin/teachers/page.tsx
+  15:63  warning  'Briefcase' is defined but never used          @typescript-eslint/no-unused-vars
+  15:86  warning  'BookIcon' is defined but never used           @typescript-eslint/no-unused-vars
+  15:96  warning  'Layers' is defined but never used             @typescript-eslint/no-unused-vars
+  35:11  warning  'subjects' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/auth.config.ts
+  19:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/admin-sidebar.tsx
+  6:27   warning  'Settings' is defined but never used        @typescript-eslint/no-unused-vars
+  6:100  warning  'PanelLeftClose' is defined but never used  @typescript-eslint/no-unused-vars
+  6:116  warning  'PanelLeftOpen' is defined but never used   @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/configuration-list.tsx
+  26:10  warning  'createBoard' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/session-dialogs.tsx
+  13:20  warning  'Edit2' is defined but never used         @typescript-eslint/no-unused-vars
+  16:61  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:68  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:84  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/session-form.tsx
+  30:15  error    Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+  45:11  warning  The 'subjects' logical expression could make the dependencies of useMemo Hook (at line 47) change on every render. To fix this, wrap the initialization of 'subjects' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  48:11  warning  The 'chapters' logical expression could make the dependencies of useMemo Hook (at line 50) change on every render. To fix this, wrap the initialization of 'chapters' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/sidebar-provider.tsx
+  20:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/sidebar-provider.tsx:20:13
+  18 |         const saved = localStorage.getItem('sidebar-collapsed');
+  19 |         if (saved !== null) {
+> 20 |             setIsCollapsed(saved === 'true');
+     |             ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |         }
+  22 |     }, []);
+  23 |  react-hooks/set-state-in-effect
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/admin/syllabus-client.tsx
+   3:10  warning  'useState' is defined but never used                        @typescript-eslint/no-unused-vars
+  40:11  warning  'handleStopPropagation' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/components/ui/textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/allocation.ts
+  23:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  33:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/board.ts
+  17:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  36:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  46:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/class.ts
+  65:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  76:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/curriculum.ts
+  18:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  36:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  46:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  63:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  81:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  91:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/resources.ts
+  42:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  73:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  83:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/session.ts
+  84:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  94:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/student.ts
+  34:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  64:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  74:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/subject.ts
+  29:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  50:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  61:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/lib/actions/teacher.ts
+   52:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  100:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  110:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/agrank/Stuffs/ai_projects/homeskoolerp/src/types/next-auth.d.ts
+  1:8   warning  'NextAuth' is defined but never used  @typescript-eslint/no-unused-vars
+  2:10  warning  'JWT' is defined but never used       @typescript-eslint/no-unused-vars
+
+✖ 59 problems (9 errors, 50 warnings)
+

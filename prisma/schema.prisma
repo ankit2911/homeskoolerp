@@ -7,157 +7,172 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Model (Base for implementation of Auth)
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // Hashed password
-  name      String?
-  role      String   @default("STUDENT") // ADMIN, TEACHER, STUDENT
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Profile Relations
+  id             String          @id @default(cuid())
+  email          String          @unique
+  password       String
+  name           String?
+  role           String          @default("STUDENT")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  notifications  Notification[]
   studentProfile StudentProfile?
   teacherProfile TeacherProfile?
-  notifications Notification[]
 }
 
-// Student Specific Data
 model StudentProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  classId     String?
-  class       Class?   @relation(fields: [classId], references: [id])
-  parentPhone String?
-  
-  attendance  Attendance[]
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  firstName        String?
+  lastName         String?
+  rollNumber       String?      @unique
+  dateOfBirth      DateTime?
+  gender           String?
+  fatherName       String?
+  motherName       String?
+  emergencyContact String?
+  parentPhone      String?
+  address          String?
+  previousSchool   String?
+  academicYear     String?      @default("2025-26")
+  classId          String?
+  attendance       Attendance[]
+  class            Class?       @relation(fields: [classId], references: [id])
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Teacher Specific Data
 model TeacherProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  allocations TeacherAllocation[]
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  firstName            String?
+  lastName             String?
+  phoneCode            String?
+  phoneNumber          String?
+  qualification        String?
+  experience           Int?
+  specialization       String?
+  classes              String?
+  previousInstitutions String?
+  licenseNumber        String?
+  allocations          TeacherAllocation[]
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// School Structure
 model Board {
   id      String  @id @default(cuid())
-  name    String  @unique // e.g. CBSE, ICSE
+  name    String  @unique
   classes Class[]
 }
 
 model Class {
-  id        String    @id @default(cuid())
-  name      String    // e.g. "Class 10"
-  section   String?   // e.g. "A"
-  boardId   String
-  board     Board     @relation(fields: [boardId], references: [id])
-  
-  students  StudentProfile[]
-  subjects  Subject[]
-  allocations TeacherAllocation[]
-  sessions    Session[]
+  id          String              @id @default(cuid())
+  name        String
+  section     String?
+  boardId     String
+  board       Board               @relation(fields: [boardId], references: [id])
   resources   Resource[]
+  sessions    Session[]
+  students    StudentProfile[]
+  subjects    Subject[]
+  allocations TeacherAllocation[]
+}
+
+model SubjectMaster {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  code     String    @unique
+  category String?   @default("primary")
+  subjects Subject[]
 }
 
 model Subject {
-  id        String    @id @default(cuid())
-  name      String    // e.g. "Mathematics"
-  classId   String
-  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
-  
-  allocations TeacherAllocation[]
-  sessions    Session[]
-  resources   Resource[]
-  chapters    Chapter[]
+  id              String              @id @default(cuid())
+  name            String
+  subjectMasterId String?
+  classId         String
+  chapters        Chapter[]
+  resources       Resource[]
+  sessions        Session[]
+  class           Class               @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectMaster   SubjectMaster?      @relation(fields: [subjectMasterId], references: [id])
+  allocations     TeacherAllocation[]
 }
 
 model Chapter {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   subjectId String
-  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  topics    Topic[]
+  subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   sessions  Session[]
+  topics    Topic[]
 }
 
 model Topic {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   chapterId String
-  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   sessions  Session[]
+  chapter   Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 }
 
-// Mapping Teacher -> Class -> Subject
 model TeacherAllocation {
   id        String         @id @default(cuid())
   teacherId String
-  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   classId   String
-  class     Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
   subjectId String
   subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class     Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   @@unique([teacherId, classId, subjectId])
 }
 
-// Session / Calendar
 model Session {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
   description String?
   startTime   DateTime
   endTime     DateTime
-  status      String   @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
-  
+  status      String       @default("SCHEDULED")
   classId     String
-  class       Class    @relation(fields: [classId], references: [id])
   subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id])
-
   chapterId   String?
-  chapter     Chapter? @relation(fields: [chapterId], references: [id])
   topicId     String?
-  topic       Topic?   @relation(fields: [topicId], references: [id])
-  
   attendance  Attendance[]
+  topic       Topic?       @relation(fields: [topicId], references: [id])
+  chapter     Chapter?     @relation(fields: [chapterId], references: [id])
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  class       Class        @relation(fields: [classId], references: [id])
 }
 
 model Attendance {
-  id          String         @id @default(cuid())
-  date        DateTime       @default(now())
-  status      String         // PRESENT, ABSENT, LATE
-  
-  sessionId   String
-  session     Session        @relation(fields: [sessionId], references: [id])
-  studentId   String
-  student     StudentProfile @relation(fields: [studentId], references: [id])
+  id        String         @id @default(cuid())
+  date      DateTime       @default(now())
+  status    String
+  sessionId String
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id])
+  session   Session        @relation(fields: [sessionId], references: [id])
 }
 
 model Resource {
   id          String   @id @default(cuid())
   title       String
   description String?
-  type        String   // PDF, VIDEO, LINK
+  type        String
   url         String
   classId     String
-  class       Class    @relation(fields: [classId], references: [id])
   subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id])
   createdAt   DateTime @default(now())
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  class       Class    @relation(fields: [classId], references: [id])
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  message     String
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  message   String
+  userId    String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
