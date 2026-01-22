@@ -32,10 +32,16 @@ model StudentProfile {
   motherName       String?
   emergencyContact String?
   parentPhone      String?
+  studentEmail     String?
+  studentPhone     String?
+  alternateEmail   String?
+  alternatePhone   String?
   address          String?
   previousSchool   String?
   academicYear     String?      @default("2025-26")
   classId          String?
+  status           String?      @default("ACTIVE")
+  adminComments    String?
   attendance       Attendance[]
   class            Class?       @relation(fields: [classId], references: [id])
   user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)

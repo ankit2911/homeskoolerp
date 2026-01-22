@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { createTeacher, updateTeacher, deleteTeacher } from '@/lib/actions/teacher';
+import { type User, type TeacherProfile } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -67,7 +68,7 @@ export default async function TeachersPage({ searchParams }: PageProps) {
     const teachers = await db.user.findMany({
         where,
         include: { teacherProfile: true }
-    }) as any[]; // Cast to any temporarily to resolve Prisma client sync issues with new schema
+    }) as (User & { teacherProfile: TeacherProfile | null })[];
 
     const subjectMasters = await db.subjectMaster.findMany({
         orderBy: { name: 'asc' }

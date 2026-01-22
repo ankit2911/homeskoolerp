@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -36,10 +35,6 @@ type Subject = {
 export function SyllabusClient({ subjects }: { subjects: Subject[] }) {
     // We can use state to manage dialog open states if needed for better UX, 
     // but distinct dialogs for each item work fine for now.
-
-    const handleStopPropagation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-    };
 
     return (
         <div className="space-y-4">

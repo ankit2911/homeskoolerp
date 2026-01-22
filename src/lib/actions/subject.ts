@@ -4,23 +4,41 @@ import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 export async function createSubject(formData: FormData) {
-    const name = formData.get('name') as string;
     const classId = formData.get('classId') as string;
-    const classIds = formData.getAll('classIds') as string[];
+    const subjectMasterIds = formData.getAll('subjectMasterIds') as string[];
 
-    if (!name) return { error: 'Name is required' };
+    if (!classId) return { error: 'Class is required' };
 
     try {
-        if (classIds && classIds.length > 0) {
-            await db.subject.createMany({
-                data: classIds.map(id => ({ name, classId: id })),
+        if (subjectMasterIds && subjectMasterIds.length > 0) {
+            // Check for existing subjects to avoid duplicates
+            const existingSubjects = await db.subject.findMany({
+                where: {
+                    classId,
+                    subjectMasterId: { in: subjectMasterIds }
+                },
+                select: { subjectMasterId: true }
             });
-        } else if (classId) {
-            await db.subject.create({
-                data: { name, classId },
-            });
+
+            const existingIds = existingSubjects.map(s => s.subjectMasterId);
+            const newSubjectMasterIds = subjectMasterIds.filter(id => !existingIds.includes(id));
+
+            if (newSubjectMasterIds.length > 0) {
+                // Fetch subject masters to get names
+                const subjectMasters = await db.subjectMaster.findMany({
+                    where: { id: { in: newSubjectMasterIds } }
+                });
+
+                await db.subject.createMany({
+                    data: subjectMasters.map(sm => ({
+                        name: sm.name,
+                        classId,
+                        subjectMasterId: sm.id
+                    })),
+                });
+            }
         } else {
-            return { error: 'Class is required' };
+            return { error: 'At least one subject must be selected' };
         }
 
         revalidatePath('/admin/configuration');

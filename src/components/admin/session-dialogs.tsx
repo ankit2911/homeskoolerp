@@ -10,10 +10,22 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Calendar, Edit2 } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { SessionForm } from './session-form';
+import { type Class, type Session } from '@prisma/client';
 
-export function CreateSessionDialog({ classes }: { classes: any[] }) {
+// Define ClassType to match SessionForm expectation
+type Topic = { id: string; name: string };
+type Chapter = { id: string; name: string; topics: Topic[] };
+type Subject = { id: string; name: string; chapters: Chapter[] };
+type ClassType = {
+    id: string;
+    name: string;
+    board: { name: string };
+    subjects: Subject[]
+};
+
+export function CreateSessionDialog({ classes }: { classes: ClassType[] }) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -35,7 +47,7 @@ export function CreateSessionDialog({ classes }: { classes: any[] }) {
     );
 }
 
-export function EditSessionDialog({ classes, session }: { classes: any[]; session: any }) {
+export function EditSessionDialog({ classes, session }: { classes: ClassType[]; session: Session }) {
     const [open, setOpen] = useState(false);
 
     return (

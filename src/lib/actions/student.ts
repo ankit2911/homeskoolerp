@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 
 export async function createStudent(formData: FormData) {
@@ -18,9 +19,15 @@ export async function createStudent(formData: FormData) {
     const motherName = formData.get('motherName') as string;
     const emergencyContact = formData.get('emergencyContact') as string;
     const parentPhone = formData.get('parentPhone') as string;
+    const studentEmail = formData.get('studentEmail') as string;
+    const studentPhone = formData.get('studentPhone') as string;
+    const alternateEmail = formData.get('alternateEmail') as string;
+    const alternatePhone = formData.get('alternatePhone') as string;
     const address = formData.get('address') as string;
     const previousSchool = formData.get('previousSchool') as string;
     const academicYear = (formData.get('academicYear') as string) || '2025-26';
+    const status = (formData.get('status') as string) || 'ACTIVE';
+    const adminComments = formData.get('adminComments') as string;
 
     if (!firstName || !email || !password || !classId) return { error: 'Required fields are missing' };
 
@@ -44,10 +51,16 @@ export async function createStudent(formData: FormData) {
                         motherName,
                         emergencyContact,
                         parentPhone,
+                        studentEmail,
+                        studentPhone,
+                        alternateEmail,
+                        alternatePhone,
                         address,
                         previousSchool,
                         academicYear,
-                        classId
+                        classId,
+                        status,
+                        adminComments
                     }
                 }
             },
@@ -75,9 +88,15 @@ export async function updateStudent(formData: FormData) {
     const motherName = formData.get('motherName') as string;
     const emergencyContact = formData.get('emergencyContact') as string;
     const parentPhone = formData.get('parentPhone') as string;
+    const studentEmail = formData.get('studentEmail') as string;
+    const studentPhone = formData.get('studentPhone') as string;
+    const alternateEmail = formData.get('alternateEmail') as string;
+    const alternatePhone = formData.get('alternatePhone') as string;
     const address = formData.get('address') as string;
     const previousSchool = formData.get('previousSchool') as string;
     const academicYear = (formData.get('academicYear') as string) || '2025-26';
+    const status = (formData.get('status') as string) || 'ACTIVE';
+    const adminComments = formData.get('adminComments') as string;
 
     if (!id || !firstName || !email || !classId) return { error: 'ID, Name, Email, and Class are required' };
 
@@ -98,16 +117,22 @@ export async function updateStudent(formData: FormData) {
                         motherName,
                         emergencyContact,
                         parentPhone,
+                        studentEmail,
+                        studentPhone,
+                        alternateEmail,
+                        alternatePhone,
                         address,
                         previousSchool,
                         academicYear,
-                        classId
+                        classId,
+                        status,
+                        adminComments
                     }
                 }
             },
         });
         revalidatePath('/admin/students');
-        return { success: true };
+        redirect('/admin/students');
     } catch (error) {
         console.error('Failed to update student:', error);
         return { error: 'Failed to update student.' };

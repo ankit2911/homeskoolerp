@@ -7,7 +7,7 @@ export async function createClass(formData: FormData) {
     const name = formData.get('name') as string;
     const section = formData.get('section') as string;
     const boardId = formData.get('boardId') as string;
-    const subjectsString = formData.get('subjects') as string;
+    const subjectIds = formData.getAll('subjectIds') as string[];
 
     if (!name || !boardId) return { error: 'Name and Board are required' };
 
@@ -20,16 +20,20 @@ export async function createClass(formData: FormData) {
             },
         });
 
-        if (subjectsString) {
-            const subjects = subjectsString.split(',').map(s => s.trim()).filter(Boolean);
-            if (subjects.length > 0) {
-                await db.subject.createMany({
-                    data: subjects.map(s => ({
-                        name: s,
-                        classId: newClass.id
-                    }))
-                });
-            }
+        // Create subjects from selected SubjectMaster IDs
+        if (subjectIds.length > 0) {
+            // Fetch subject masters to get names
+            const subjectMasters = await db.subjectMaster.findMany({
+                where: { id: { in: subjectIds } }
+            });
+
+            await db.subject.createMany({
+                data: subjectMasters.map(sm => ({
+                    name: sm.name,
+                    classId: newClass.id,
+                    subjectMasterId: sm.id
+                }))
+            });
         }
 
         revalidatePath('/admin/configuration');
@@ -47,6 +51,7 @@ export async function updateClass(formData: FormData) {
     const name = formData.get('name') as string;
     const section = formData.get('section') as string;
     const boardId = formData.get('boardId') as string;
+    const subjectIds = formData.getAll('subjectIds') as string[];
 
     if (!id || !name || !boardId) return { error: 'ID, Name and Board are required' };
 
@@ -59,10 +64,51 @@ export async function updateClass(formData: FormData) {
                 boardId
             },
         });
+
+        // Handle subject updates
+        const existingSubjects = await db.subject.findMany({
+            where: { classId: id }
+        });
+
+        const existingSubjectMasterIds = existingSubjects
+            .map(s => s.subjectMasterId)
+            .filter((id): id is string => id !== null);
+
+        // Determine subjects to add
+        const subjectsToAdd = subjectIds.filter(smId => !existingSubjectMasterIds.includes(smId));
+
+        // Determine subjects to remove (only those linked to a SubjectMaster)
+        const subjectsToRemove = existingSubjects.filter(s =>
+            s.subjectMasterId && !subjectIds.includes(s.subjectMasterId)
+        );
+
+        if (subjectsToAdd.length > 0) {
+            const subjectMasters = await db.subjectMaster.findMany({
+                where: { id: { in: subjectsToAdd } }
+            });
+
+            await db.subject.createMany({
+                data: subjectMasters.map(sm => ({
+                    name: sm.name,
+                    classId: id,
+                    subjectMasterId: sm.id
+                }))
+            });
+        }
+
+        if (subjectsToRemove.length > 0) {
+            await db.subject.deleteMany({
+                where: {
+                    id: { in: subjectsToRemove.map(s => s.id) }
+                }
+            });
+        }
+
         revalidatePath('/admin/configuration');
         revalidatePath('/admin/curriculum');
         return { success: true };
     } catch (error) {
+        console.error(error);
         return { error: 'Failed to update class.' };
     }
 }

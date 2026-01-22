@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Settings, BookOpen, Users, GraduationCap, Calendar, FileText, Settings2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, GraduationCap, Calendar, FileText, Settings2 } from 'lucide-react';
 import { useSidebar } from './sidebar-provider';
 
 const sidebarGroups = [

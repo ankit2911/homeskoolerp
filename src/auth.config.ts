@@ -1,26 +1,28 @@
 import type { NextAuthConfig } from 'next-auth';
+import type { Session } from 'next-auth';
+import type { NextRequest } from 'next/server';
 
 export const authConfig = {
     pages: {
         signIn: '/login',
     },
     callbacks: {
-        authorized({ auth, request: { nextUrl } }: any) {
+        authorized({ auth, request }: { auth: Session | null; request: NextRequest }) {
             const isLoggedIn = !!auth?.user;
-            const isOnDashboard = nextUrl.pathname.startsWith('/admin') ||
-                nextUrl.pathname.startsWith('/teacher') ||
-                nextUrl.pathname.startsWith('/student');
+            const isOnDashboard = request.nextUrl.pathname.startsWith('/admin') ||
+                request.nextUrl.pathname.startsWith('/teacher') ||
+                request.nextUrl.pathname.startsWith('/student');
 
             if (isOnDashboard) {
                 if (isLoggedIn) return true;
                 return false; // Redirect unauthenticated users to login page
             } else if (isLoggedIn) {
-                if (nextUrl.pathname === '/login' || nextUrl.pathname === '/') {
-                    const role = (auth.user as any).role;
-                    if (role === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl));
-                    if (role === 'TEACHER') return Response.redirect(new URL('/teacher', nextUrl));
-                    if (role === 'STUDENT') return Response.redirect(new URL('/student', nextUrl));
-                    return Response.redirect(new URL('/student', nextUrl)); // Fallback
+                if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/') {
+                    const role = auth.user.role;
+                    if (role === 'ADMIN') return Response.redirect(new URL('/admin', request.nextUrl));
+                    if (role === 'TEACHER') return Response.redirect(new URL('/teacher', request.nextUrl));
+                    if (role === 'STUDENT') return Response.redirect(new URL('/student', request.nextUrl));
+                    return Response.redirect(new URL('/student', request.nextUrl)); // Fallback
                 }
             }
             return true;

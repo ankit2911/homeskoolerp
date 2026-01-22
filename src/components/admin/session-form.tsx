@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { createSession, updateSession } from '@/lib/actions/session';
 import { DialogFooter } from '@/components/ui/dialog';
+import { type Session } from '@prisma/client';
 
 // Define minimal types needed for the form
 type Topic = { id: string; name: string };
@@ -27,7 +28,7 @@ type ClassType = {
 
 type SessionFormProps = {
     classes: ClassType[];
-    session?: any; // If editing
+    session?: Session; // If editing
     onClose?: () => void;
 };
 
