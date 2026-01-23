@@ -1,229 +1,316 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-    const password = await bcrypt.hash('password123', 10)
+    console.log('🌱 Starting seed...');
 
-    const admin = await prisma.user.upsert({
-        where: { email: 'admin@school.com' },
-        update: {},
-        create: {
-            email: 'admin@school.com',
+    // Clear existing data
+    console.log('🗑️  Clearing existing data...');
+    await prisma.studentSubject.deleteMany();
+    await prisma.attendance.deleteMany();
+    await prisma.resourceFile.deleteMany();
+    await prisma.resource.deleteMany();
+    await prisma.session.deleteMany();
+    await prisma.teacherAllocation.deleteMany();
+    await prisma.topic.deleteMany();
+    await prisma.chapter.deleteMany();
+    await prisma.subject.deleteMany();
+    await prisma.class.deleteMany();
+    await prisma.subjectMaster.deleteMany();
+    await prisma.board.deleteMany();
+    await prisma.notification.deleteMany();
+    await prisma.studentProfile.deleteMany();
+    await prisma.teacherProfile.deleteMany();
+    await prisma.user.deleteMany();
+
+    const hashedPassword = await bcrypt.hash('password123', 10);
+
+    // Create Admin
+    console.log('👤 Creating admin user...');
+    await prisma.user.create({
+        data: {
+            email: 'admin@homeskool.com',
+            password: hashedPassword,
             name: 'Admin User',
-            password,
-            role: 'ADMIN',
-        },
-    })
+            role: 'ADMIN'
+        }
+    });
 
-    // Create boards
-    const cbse = await prisma.board.upsert({
-        where: { name: 'CBSE' },
-        update: {},
-        create: { name: 'CBSE' }
-    })
+    // Create Boards
+    console.log('📋 Creating boards...');
+    const cbse = await prisma.board.create({ data: { name: 'CBSE' } });
+    const icse = await prisma.board.create({ data: { name: 'ICSE' } });
+    const state = await prisma.board.create({ data: { name: 'State Board' } });
 
-    const icse = await prisma.board.upsert({
-        where: { name: 'ICSE' },
-        update: {},
-        create: { name: 'ICSE' }
-    })
+    // Create Subject Masters
+    console.log('📚 Creating subject masters...');
+    const subjectMasters = await Promise.all([
+        prisma.subjectMaster.create({ data: { name: 'Mathematics', code: 'MATH', category: 'primary' } }),
+        prisma.subjectMaster.create({ data: { name: 'Science', code: 'SCI', category: 'primary' } }),
+        prisma.subjectMaster.create({ data: { name: 'English', code: 'ENG', category: 'language' } }),
+        prisma.subjectMaster.create({ data: { name: 'Hindi', code: 'HIN', category: 'language' } }),
+        prisma.subjectMaster.create({ data: { name: 'Social Studies', code: 'SST', category: 'secondary' } }),
+        prisma.subjectMaster.create({ data: { name: 'Computer Science', code: 'CS', category: 'elective' } }),
+        prisma.subjectMaster.create({ data: { name: 'Physical Education', code: 'PE', category: 'cocurricular' } }),
+        prisma.subjectMaster.create({ data: { name: 'Art & Craft', code: 'ART', category: 'cocurricular' } }),
+    ]);
 
-    // Create classes
-    const classes = [
-        { name: 'Class 1', boardId: cbse.id },
-        { name: 'Class 2', boardId: cbse.id },
-        { name: 'Class 3', boardId: cbse.id },
-        { name: 'Class 4', boardId: cbse.id },
-        { name: 'Class 5', boardId: cbse.id },
-        { name: 'Class 6', boardId: cbse.id },
-        { name: 'Class 7', boardId: cbse.id },
-        { name: 'Class 8', boardId: cbse.id },
-        { name: 'Class 9', boardId: cbse.id },
-        { name: 'Class 10', boardId: cbse.id },
-        { name: 'Class 11', boardId: icse.id },
-        { name: 'Class 12', boardId: icse.id }
-    ]
-
-    const createdClasses = []
-    for (const cls of classes) {
-        const created = await prisma.class.create({
-            data: cls
-        })
-        createdClasses.push(created)
+    // Create Classes
+    console.log('🏫 Creating classes...');
+    const classes: any[] = [];
+    for (const board of [cbse, icse]) {
+        for (let grade = 1; grade <= 10; grade++) {
+            for (const section of ['A', 'B']) {
+                const cls = await prisma.class.create({
+                    data: {
+                        name: `Class ${grade}`,
+                        section,
+                        boardId: board.id,
+                        subjects: {
+                            create: subjectMasters.slice(0, grade <= 5 ? 5 : 8).map(sm => ({
+                                name: sm.name,
+                                subjectMasterId: sm.id
+                            }))
+                        }
+                    },
+                    include: { subjects: true }
+                });
+                classes.push(cls);
+            }
+        }
     }
 
-    const teachers = [
-        {
-            email: 'sarah.johnson@homeskool.com',
-            name: 'Sarah Johnson',
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            phoneCode: '+1',
-            phoneNumber: '5550123',
-            qualification: 'Masters',
-            experience: 8,
-            specialization: 'Mathematics, Calculus',
-            classes: 'High, Middle',
-            licenseNumber: 'TL-USA-9982'
-        },
-        {
-            email: 'david.smith@homeskool.com',
-            name: 'David Smith',
-            firstName: 'David',
-            lastName: 'Smith',
-            phoneCode: '+44',
-            phoneNumber: '7700900123',
-            qualification: 'Bachelors',
-            experience: 4,
-            specialization: 'Physics, Chemistry',
-            classes: 'Middle, High',
-            licenseNumber: 'TL-UK-4412'
-        },
-        {
-            email: 'priya.sharma@homeskool.com',
-            name: 'Priya Sharma',
-            firstName: 'Priya',
-            lastName: 'Sharma',
-            phoneCode: '+91',
-            phoneNumber: '9876543210',
-            qualification: 'PhD',
-            experience: 12,
-            specialization: 'Biology, Environmental Science',
-            classes: 'High',
-            licenseNumber: 'TL-IN-1029'
-        },
-        {
-            email: 'ahmed.ali@homeskool.com',
-            name: 'Ahmed Ali',
-            firstName: 'Ahmed',
-            lastName: 'Ali',
-            phoneCode: '+971',
-            phoneNumber: '501234567',
-            qualification: 'Masters',
-            experience: 6,
-            specialization: 'English Literature, History',
-            classes: 'Junior, Middle',
-            licenseNumber: 'TL-UAE-5561'
-        },
-        {
-            email: 'emily.brown@homeskool.com',
-            name: 'Emily Brown',
-            firstName: 'Emily',
-            lastName: 'Brown',
-            phoneCode: '+1',
-            phoneNumber: '5550987',
-            qualification: 'Diploma',
-            experience: 2,
-            specialization: 'Early Childhood Education, Arts',
-            classes: 'Kids',
-            licenseNumber: 'TL-USA-1102'
-        }
+    // Create Teachers
+    console.log('👨‍🏫 Creating teachers...');
+    const teacherNames = [
+        { first: 'Rahul', last: 'Sharma', spec: 'Mathematics, Science' },
+        { first: 'Priya', last: 'Gupta', spec: 'English, Hindi' },
+        { first: 'Amit', last: 'Verma', spec: 'Science, Computer Science' },
+        { first: 'Sunita', last: 'Patel', spec: 'Social Studies, English' },
+        { first: 'Vijay', last: 'Kumar', spec: 'Mathematics, Physical Education' },
+        { first: 'Neha', last: 'Singh', spec: 'Hindi, Art & Craft' },
+        { first: 'Rajesh', last: 'Mishra', spec: 'Science, Mathematics' },
+        { first: 'Kavita', last: 'Reddy', spec: 'English, Social Studies' },
     ];
 
-    for (const t of teachers) {
-        await prisma.user.upsert({
-            where: { email: t.email },
-            update: {},
-            create: {
-                email: t.email,
-                name: t.name,
-                password,
+    const teachers: any[] = [];
+    for (let i = 0; i < teacherNames.length; i++) {
+        const t = teacherNames[i];
+        const teacher = await prisma.user.create({
+            data: {
+                email: `${t.first.toLowerCase()}.${t.last.toLowerCase()}@homeskool.com`,
+                password: hashedPassword,
+                name: `${t.first} ${t.last}`,
                 role: 'TEACHER',
                 teacherProfile: {
                     create: {
-                        firstName: t.firstName,
-                        lastName: t.lastName,
-                        phoneCode: t.phoneCode,
-                        phoneNumber: t.phoneNumber,
-                        qualification: t.qualification,
-                        experience: t.experience,
-                        specialization: t.specialization,
-                        classes: t.classes,
-                        licenseNumber: t.licenseNumber
+                        firstName: t.first,
+                        lastName: t.last,
+                        phoneCode: '+91',
+                        phoneNumber: `98765${String(i).padStart(5, '0')}`,
+                        qualification: ['Bachelors', 'Masters', 'PhD'][i % 3],
+                        experience: 3 + i * 2,
+                        specialization: t.spec,
+                        classes: 'Junior, Middle, High',
+                        licenseNumber: `TL-2024-${1000 + i}`
                     }
+                }
+            },
+            include: { teacherProfile: true }
+        });
+        teachers.push(teacher);
+    }
+
+    // Create Teacher Allocations
+    console.log('📝 Creating teacher allocations...');
+    for (let i = 0; i < Math.min(classes.length, 20); i++) {
+        const cls = classes[i];
+        for (let j = 0; j < Math.min(cls.subjects.length, 3); j++) {
+            const teacher = teachers[j % teachers.length];
+            await prisma.teacherAllocation.create({
+                data: {
+                    teacherId: teacher.teacherProfile.id,
+                    classId: cls.id,
+                    subjectId: cls.subjects[j].id
+                }
+            });
+        }
+    }
+
+    // Create Students
+    console.log('👨‍🎓 Creating students...');
+    const studentNames = [
+        'Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan',
+        'Ananya', 'Aadhya', 'Myra', 'Sara', 'Ira', 'Aanya', 'Kiara', 'Diya',
+        'Ishaan', 'Kabir', 'Dhruv', 'Krishna', 'Rohan', 'Neil', 'Shiv', 'Om'
+    ];
+
+    const students: any[] = [];
+    for (let i = 0; i < studentNames.length; i++) {
+        const cls = classes[i % classes.length];
+        const student = await prisma.user.create({
+            data: {
+                email: `${studentNames[i].toLowerCase()}${i}@student.homeskool.com`,
+                password: hashedPassword,
+                name: studentNames[i] + ' Student',
+                role: 'STUDENT',
+                studentProfile: {
+                    create: {
+                        firstName: studentNames[i],
+                        lastName: 'Kumar',
+                        rollNumber: `2025${String(i + 1).padStart(4, '0')}`,
+                        dateOfBirth: new Date(2010 + (i % 10), i % 12, 1 + (i % 28)),
+                        gender: i % 2 === 0 ? 'Male' : 'Female',
+                        fatherName: `Father of ${studentNames[i]}`,
+                        motherName: `Mother of ${studentNames[i]}`,
+                        parentPhone: `98765${String(10000 + i)}`,
+                        address: `House ${i + 1}, Street ${i % 10 + 1}, City`,
+                        academicYear: '2025-26',
+                        classId: cls.id,
+                        status: 'ACTIVE'
+                    }
+                }
+            },
+            include: { studentProfile: true }
+        });
+        students.push(student);
+
+        // Enroll student in some subjects
+        if (student.studentProfile) {
+            const subjectsToEnroll = cls.subjects.slice(0, 4);
+            for (const subject of subjectsToEnroll) {
+                await prisma.studentSubject.create({
+                    data: {
+                        studentId: student.studentProfile.id,
+                        subjectId: subject.id
+                    }
+                });
+            }
+        }
+    }
+
+    // Create Chapters and Topics
+    console.log('📖 Creating chapters and topics...');
+    const cbseClass1 = classes.find(c => c.name === 'Class 1' && c.section === 'A');
+    if (cbseClass1) {
+        for (const subject of cbseClass1.subjects.slice(0, 3)) {
+            for (let ch = 1; ch <= 5; ch++) {
+                const chapter = await prisma.chapter.create({
+                    data: {
+                        name: `Chapter ${ch}: ${subject.name} Basics ${ch}`,
+                        subjectId: subject.id,
+                        topics: {
+                            create: [
+                                { name: `Topic ${ch}.1: Introduction`, description: `Introduction to chapter ${ch}` },
+                                { name: `Topic ${ch}.2: Core Concepts`, description: `Main concepts of chapter ${ch}` },
+                                { name: `Topic ${ch}.3: Practice`, description: `Practice problems for chapter ${ch}` },
+                            ]
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    // Create Sessions
+    console.log('📅 Creating sessions...');
+    const today = new Date();
+    for (let i = 0; i < 10; i++) {
+        const cls = classes[i % classes.length];
+        const subject = cls.subjects[0];
+        const sessionDate = new Date(today);
+        sessionDate.setDate(today.getDate() + i);
+        sessionDate.setHours(9 + (i % 6), 0, 0, 0);
+
+        await prisma.session.create({
+            data: {
+                title: `${subject.name} - Session ${i + 1}`,
+                description: `Regular class session for ${subject.name}`,
+                startTime: sessionDate,
+                endTime: new Date(sessionDate.getTime() + 60 * 60 * 1000),
+                status: i < 3 ? 'COMPLETED' : 'SCHEDULED',
+                classId: cls.id,
+                subjectId: subject.id
+            }
+        });
+    }
+
+    // Create Resources
+    console.log('📁 Creating resources...');
+    const resourceTypes = ['PDF', 'VIDEO', 'LINK', 'IMAGE'];
+    for (let i = 0; i < 15; i++) {
+        const cls = classes[i % classes.length];
+        const subject = cls.subjects[i % cls.subjects.length];
+
+        await prisma.resource.create({
+            data: {
+                title: `${subject.name} Resource ${i + 1}`,
+                description: `Study material for ${subject.name}`,
+                type: resourceTypes[i % resourceTypes.length],
+                classId: cls.id,
+                subjectId: subject.id,
+                files: {
+                    create: [{
+                        fileType: resourceTypes[i % resourceTypes.length],
+                        url: `https://example.com/resource-${i + 1}`,
+                        fileName: `resource-${i + 1}.${resourceTypes[i % resourceTypes.length].toLowerCase()}`
+                    }]
                 }
             }
         });
     }
 
-    const student = await prisma.user.upsert({
-        where: { email: 'student@school.com' },
-        update: {},
-        create: {
-            email: 'student@school.com',
-            name: 'Student User',
-            password,
-            role: 'STUDENT',
-            studentProfile: {
-                create: {}
-            }
-        },
-    })
-
-    // Add dummy students
-    const dummyStudents = [
-        { firstName: 'Alice', lastName: 'Johnson', email: 'alice.johnson@school.com', classId: createdClasses[0].id, rollNumber: '2025001', fatherName: 'Robert Johnson', motherName: 'Sarah Johnson', parentPhone: '+91 9876543210', studentEmail: 'alice@gmail.com', address: '123 Main St, City, State', previousSchool: 'ABC Public School', status: 'ACTIVE' },
-        { firstName: 'Bob', lastName: 'Smith', email: 'bob.smith@school.com', classId: createdClasses[1].id, rollNumber: '2025002', fatherName: 'John Smith', motherName: 'Jane Smith', parentPhone: '+91 9876543211', studentEmail: 'bob@gmail.com', address: '456 Elm St, City, State', previousSchool: 'XYZ High School', status: 'ACTIVE' },
-        { firstName: 'Charlie', lastName: 'Brown', email: 'charlie.brown@school.com', classId: createdClasses[2].id, rollNumber: '2025003', fatherName: 'David Brown', motherName: 'Lisa Brown', parentPhone: '+91 9876543212', studentEmail: 'charlie@gmail.com', address: '789 Oak St, City, State', previousSchool: 'DEF School', status: 'ACTIVE' },
-        { firstName: 'Diana', lastName: 'Prince', email: 'diana.prince@school.com', classId: createdClasses[3].id, rollNumber: '2025004', fatherName: 'Steve Prince', motherName: 'Wonder Prince', parentPhone: '+91 9876543213', studentEmail: 'diana@gmail.com', address: '101 Pine St, City, State', previousSchool: 'GHI Academy', status: 'ACTIVE' },
-        { firstName: 'Eve', lastName: 'Adams', email: 'eve.adams@school.com', classId: createdClasses[4].id, rollNumber: '2025005', fatherName: 'Adam Adams', motherName: 'Eve Adams', parentPhone: '+91 9876543214', studentEmail: 'eve@gmail.com', address: '202 Maple St, City, State', previousSchool: 'JKL School', status: 'ACTIVE' },
-        { firstName: 'Frank', lastName: 'Miller', email: 'frank.miller@school.com', classId: createdClasses[5].id, rollNumber: '2025006', fatherName: 'George Miller', motherName: 'Helen Miller', parentPhone: '+91 9876543215', studentEmail: 'frank@gmail.com', address: '303 Birch St, City, State', previousSchool: 'MNO High', status: 'ACTIVE' },
-        { firstName: 'Grace', lastName: 'Lee', email: 'grace.lee@school.com', classId: createdClasses[6].id, rollNumber: '2025007', fatherName: 'Henry Lee', motherName: 'Ivy Lee', parentPhone: '+91 9876543216', studentEmail: 'grace@gmail.com', address: '404 Cedar St, City, State', previousSchool: 'PQR Academy', status: 'ACTIVE' },
-        { firstName: 'Henry', lastName: 'Wilson', email: 'henry.wilson@school.com', classId: createdClasses[7].id, rollNumber: '2025008', fatherName: 'Jack Wilson', motherName: 'Karen Wilson', parentPhone: '+91 9876543217', studentEmail: 'henry@gmail.com', address: '505 Spruce St, City, State', previousSchool: 'STU School', status: 'ACTIVE' },
-        { firstName: 'Ivy', lastName: 'Moore', email: 'ivy.moore@school.com', classId: createdClasses[8].id, rollNumber: '2025009', fatherName: 'Larry Moore', motherName: 'Mary Moore', parentPhone: '+91 9876543218', studentEmail: 'ivy@gmail.com', address: '606 Fir St, City, State', previousSchool: 'VWX High', status: 'ACTIVE' },
-        { firstName: 'Jack', lastName: 'Taylor', email: 'jack.taylor@school.com', classId: createdClasses[9].id, rollNumber: '2025010', fatherName: 'Nathan Taylor', motherName: 'Olivia Taylor', parentPhone: '+91 9876543219', studentEmail: 'jack@gmail.com', address: '707 Ash St, City, State', previousSchool: 'YZ Academy', status: 'ACTIVE' },
-        { firstName: 'Karen', lastName: 'Anderson', email: 'karen.anderson@school.com', classId: createdClasses[10].id, rollNumber: '2025011', fatherName: 'Paul Anderson', motherName: 'Quinn Anderson', parentPhone: '+91 9876543220', studentEmail: 'karen@gmail.com', address: '808 Willow St, City, State', previousSchool: 'BCD School', status: 'ACTIVE' },
-        { firstName: 'Larry', lastName: 'Thomas', email: 'larry.thomas@school.com', classId: createdClasses[11].id, rollNumber: '2025012', fatherName: 'Ryan Thomas', motherName: 'Sara Thomas', parentPhone: '+91 9876543221', studentEmail: 'larry@gmail.com', address: '909 Poplar St, City, State', previousSchool: 'EFG High', status: 'ACTIVE' },
-        { firstName: 'Mary', lastName: 'Jackson', email: 'mary.jackson@school.com', classId: createdClasses[0].id, rollNumber: '2025013', fatherName: 'Tom Jackson', motherName: 'Uma Jackson', parentPhone: '+91 9876543222', studentEmail: 'mary@gmail.com', address: '1010 Chestnut St, City, State', previousSchool: 'HIJ Academy', status: 'INACTIVE', adminComments: 'Temporarily inactive' },
-        { firstName: 'Nathan', lastName: 'White', email: 'nathan.white@school.com', classId: createdClasses[1].id, rollNumber: '2025014', fatherName: 'Victor White', motherName: 'Wendy White', parentPhone: '+91 9876543223', studentEmail: 'nathan@gmail.com', address: '1111 Hickory St, City, State', previousSchool: 'KLM School', status: 'SUSPENDED', adminComments: 'Suspended for misconduct' },
-        { firstName: 'Olivia', lastName: 'Harris', email: 'olivia.harris@school.com', classId: createdClasses[2].id, rollNumber: '2025015', fatherName: 'Xavier Harris', motherName: 'Yara Harris', parentPhone: '+91 9876543224', studentEmail: 'olivia@gmail.com', address: '1212 Sycamore St, City, State', previousSchool: 'NOP High', status: 'ACTIVE' },
-        { firstName: 'Paul', lastName: 'Martin', email: 'paul.martin@school.com', classId: createdClasses[3].id, rollNumber: '2025016', fatherName: 'Zane Martin', motherName: 'Amy Martin', parentPhone: '+91 9876543225', studentEmail: 'paul@gmail.com', address: '1313 Alder St, City, State', previousSchool: 'QRS Academy', status: 'ACTIVE' },
-        { firstName: 'Quinn', lastName: 'Thompson', email: 'quinn.thompson@school.com', classId: createdClasses[4].id, rollNumber: '2025017', fatherName: 'Ben Thompson', motherName: 'Cathy Thompson', parentPhone: '+91 9876543226', studentEmail: 'quinn@gmail.com', address: '1414 Beech St, City, State', previousSchool: 'TUV School', status: 'ACTIVE' },
-        { firstName: 'Ryan', lastName: 'Garcia', email: 'ryan.garcia@school.com', classId: createdClasses[5].id, rollNumber: '2025018', fatherName: 'David Garcia', motherName: 'Eva Garcia', parentPhone: '+91 9876543227', studentEmail: 'ryan@gmail.com', address: '1515 Dogwood St, City, State', previousSchool: 'WXY High', status: 'ACTIVE' },
-        { firstName: 'Sara', lastName: 'Martinez', email: 'sara.martinez@school.com', classId: createdClasses[6].id, rollNumber: '2025019', fatherName: 'Frank Martinez', motherName: 'Gina Martinez', parentPhone: '+91 9876543228', studentEmail: 'sara@gmail.com', address: '1616 Elm St, City, State', previousSchool: 'ZAB Academy', status: 'ACTIVE' },
-        { firstName: 'Tom', lastName: 'Robinson', email: 'tom.robinson@school.com', classId: createdClasses[7].id, rollNumber: '2025020', fatherName: 'Harry Robinson', motherName: 'Iris Robinson', parentPhone: '+91 9876543229', studentEmail: 'tom@gmail.com', address: '1717 Pine St, City, State', previousSchool: 'CDE School', status: 'ACTIVE' }
-    ]
-
-    for (const s of dummyStudents) {
-        await prisma.user.upsert({
-            where: { email: s.email },
-            update: {},
-            create: {
-                email: s.email,
-                name: `${s.firstName} ${s.lastName}`.trim(),
-                password,
-                role: 'STUDENT',
-                studentProfile: {
-                    create: {
-                        firstName: s.firstName,
-                        lastName: s.lastName,
-                        rollNumber: s.rollNumber,
-                        fatherName: s.fatherName,
-                        motherName: s.motherName,
-                        parentPhone: s.parentPhone,
-                        studentEmail: s.studentEmail,
-                        address: s.address,
-                        previousSchool: s.previousSchool,
-                        classId: s.classId,
-                        status: s.status,
-                        adminComments: s.adminComments || ''
-                    }
+    // Create Notifications
+    console.log('🔔 Creating notifications...');
+    const adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+    if (adminUser) {
+        const notifications = [
+            'New student enrolled in Class 5A',
+            'Teacher Rahul submitted session report',
+            'Resource uploaded for Mathematics',
+            'Upcoming parent-teacher meeting',
+            'System maintenance scheduled'
+        ];
+        for (const msg of notifications) {
+            await prisma.notification.create({
+                data: {
+                    message: msg,
+                    userId: adminUser.id,
+                    isRead: false
                 }
-            }
-        })
+            });
+        }
     }
 
-    console.log({ admin, student })
+    console.log('✅ Seed completed successfully!');
+    console.log(`
+📊 Summary:
+- 1 Admin user
+- ${teachers.length} Teachers
+- ${students.length} Students
+- ${classes.length} Classes
+- ${subjectMasters.length} Subject Masters
+- Teacher allocations created
+- Chapters & Topics created
+- Sessions scheduled
+- Resources uploaded
+- Notifications added
+
+🔑 Login credentials:
+   Email: admin@homeskool.com
+   Password: password123
+   
+   Or any teacher/student email with password: password123
+`);
 }
 
 main()
-    .then(async () => {
-        await prisma.$disconnect()
+    .catch((e) => {
+        console.error('❌ Seed failed:', e);
+        process.exit(1);
     })
-    .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
