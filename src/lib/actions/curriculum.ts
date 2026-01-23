@@ -50,13 +50,14 @@ export async function deleteChapter(id: string) {
 
 export async function createTopic(formData: FormData) {
     const name = formData.get('name') as string;
+    const description = formData.get('description') as string | null;
     const chapterId = formData.get('chapterId') as string;
 
     if (!name || !chapterId) return { error: 'Name and Chapter are required' };
 
     try {
         await db.topic.create({
-            data: { name, chapterId },
+            data: { name, description: description || null, chapterId },
         });
         revalidatePath('/admin/curriculum');
         return { success: true };
@@ -68,13 +69,14 @@ export async function createTopic(formData: FormData) {
 export async function updateTopic(formData: FormData) {
     const id = formData.get('id') as string;
     const name = formData.get('name') as string;
+    const description = formData.get('description') as string | null;
 
     if (!id || !name) return { error: 'ID and Name are required' };
 
     try {
         await db.topic.update({
             where: { id },
-            data: { name },
+            data: { name, description: description || null },
         });
         revalidatePath('/admin/curriculum');
         return { success: true };

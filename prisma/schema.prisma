@@ -114,11 +114,13 @@ model Chapter {
 }
 
 model Topic {
-  id        String    @id @default(cuid())
-  name      String
-  chapterId String
-  sessions  Session[]
-  chapter   Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  chapterId   String
+  sessions    Session[]
+  chapter     Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  resources   Resource[]
 }
 
 model TeacherAllocation {
@@ -162,16 +164,29 @@ model Attendance {
 }
 
 model Resource {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   title       String
   description String?
   type        String
-  url         String
   classId     String
   subjectId   String
+  topicId     String?
+  createdAt   DateTime       @default(now())
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  class       Class          @relation(fields: [classId], references: [id])
+  topic       Topic?         @relation(fields: [topicId], references: [id])
+  files       ResourceFile[]
+}
+
+model ResourceFile {
+  id          String   @id @default(cuid())
+  resourceId  String
+  fileType    String
+  url         String
+  fileName    String?
+  fileSize    Int?
   createdAt   DateTime @default(now())
-  subject     Subject  @relation(fields: [subjectId], references: [id])
-  class       Class    @relation(fields: [classId], references: [id])
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
