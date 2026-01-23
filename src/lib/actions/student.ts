@@ -11,6 +11,7 @@ export async function createStudent(formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const classId = formData.get('classId') as string;
+    const subjectIds = formData.getAll('subjectIds') as string[];
 
     const rollNumber = formData.get('rollNumber') as string;
     const dateOfBirth = formData.get('dateOfBirth') ? new Date(formData.get('dateOfBirth') as string) : null;
@@ -34,7 +35,7 @@ export async function createStudent(formData: FormData) {
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await db.user.create({
+        const user = await db.user.create({
             data: {
                 name: `${firstName} ${lastName}`.trim(),
                 email,
@@ -64,7 +65,19 @@ export async function createStudent(formData: FormData) {
                     }
                 }
             },
+            include: { studentProfile: true }
         });
+
+        // Create subject enrollments
+        if (user.studentProfile && subjectIds.length > 0) {
+            await db.studentSubject.createMany({
+                data: subjectIds.map(subjectId => ({
+                    studentId: user.studentProfile!.id,
+                    subjectId
+                }))
+            });
+        }
+
         revalidatePath('/admin/students');
         return { success: true };
     } catch (error) {
@@ -80,6 +93,7 @@ export async function updateStudent(formData: FormData) {
     const lastName = formData.get('lastName') as string;
     const email = formData.get('email') as string;
     const classId = formData.get('classId') as string;
+    const subjectIds = formData.getAll('subjectIds') as string[];
 
     const rollNumber = formData.get('rollNumber') as string;
     const dateOfBirth = formData.get('dateOfBirth') ? new Date(formData.get('dateOfBirth') as string) : null;
@@ -101,7 +115,7 @@ export async function updateStudent(formData: FormData) {
     if (!id || !firstName || !email || !classId) return { error: 'ID, Name, Email, and Class are required' };
 
     try {
-        await db.user.update({
+        const user = await db.user.update({
             where: { id },
             data: {
                 name: `${firstName} ${lastName}`.trim(),
@@ -130,7 +144,27 @@ export async function updateStudent(formData: FormData) {
                     }
                 }
             },
+            include: { studentProfile: true }
         });
+
+        // Update subject enrollments
+        if (user.studentProfile) {
+            // Delete existing enrollments
+            await db.studentSubject.deleteMany({
+                where: { studentId: user.studentProfile.id }
+            });
+
+            // Create new enrollments
+            if (subjectIds.length > 0) {
+                await db.studentSubject.createMany({
+                    data: subjectIds.map(subjectId => ({
+                        studentId: user.studentProfile!.id,
+                        subjectId
+                    }))
+                });
+            }
+        }
+
         revalidatePath('/admin/students');
         redirect('/admin/students');
     } catch (error) {

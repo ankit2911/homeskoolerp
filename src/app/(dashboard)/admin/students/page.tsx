@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { createStudent, updateStudent, deleteStudent } from '@/lib/actions/student';
+import { updateStudent, deleteStudent } from '@/lib/actions/student';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import {
-    Plus, Search, Edit2,
+    Search, Edit2,
     Filter,
     UserCircle,
     RotateCcw,
@@ -32,21 +32,33 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AddStudentForm } from '@/components/admin/student-form-client';
 
 export default async function StudentsPage() {
     const students = await db.user.findMany({
         where: { role: 'STUDENT' },
         include: {
             studentProfile: {
-                include: { class: { include: { board: true } } }
+                include: {
+                    class: { include: { board: true } }
+                }
             }
         },
         orderBy: { createdAt: 'desc' }
     });
 
-    const classes = await db.class.findMany({
-        include: { board: true }
+    const classesData = await db.class.findMany({
+        include: {
+            board: true,
+            subjects: {
+                include: { subjectMaster: true }
+            }
+        }
     });
+
+    // Serialize for client component
+    const classes = JSON.parse(JSON.stringify(classesData));
+
 
     return (
         <div className="space-y-6 pb-6">
@@ -55,246 +67,7 @@ export default async function StudentsPage() {
                     <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">Student Management</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage student enrollment, class assignments, and academic records</p>
                 </div>
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button className="h-8 px-4 font-bold shadow-sm shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-95">
-                            <Plus className="mr-2 h-4 w-4" /> Add Student
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle className="font-heading text-xl">Add New Student</DialogTitle>
-                            <DialogDescription>
-                                Create a detailed profile for a new student.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <ScrollArea className="max-h-[85vh] pr-4">
-                            <form action={async (formData) => {
-                                'use server';
-                                await createStudent(formData);
-                            }} id="student-form" className="space-y-6 py-4">
-                                {/* Personal Information Section */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2 border-b pb-1">
-                                        <UserCircle className="h-4 w-4 text-primary" />
-                                        <h3 className="font-heading font-bold text-sm">Personal Information</h3>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground -mt-3">Please provide basic contact and identification details.</p>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">First Name <span className="text-red-500">*</span></Label>
-                                            <Input name="firstName" placeholder="e.g. Alice" required />
-                                            <p className="text-[10px] text-muted-foreground italic">Student&apos;s legal first name.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Last Name</Label>
-                                            <Input name="lastName" placeholder="e.g. Smith" />
-                                            <p className="text-[10px] text-muted-foreground italic">Optional surname.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Email <span className="text-red-500">*</span></Label>
-                                            <Input name="email" type="email" placeholder="e.g. alice@school.com" required />
-                                            <p className="text-[10px] text-muted-foreground italic">Used for login and notifications.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Password <span className="text-red-500">*</span></Label>
-                                            <Input name="password" type="password" required />
-                                            <p className="text-[10px] text-muted-foreground italic">Must be at least 8 characters.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Roll Number</Label>
-                                            <Input name="rollNumber" placeholder="e.g. 2025001" />
-                                            <p className="text-[10px] text-muted-foreground italic">Unique student identifier.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Date of Birth</Label>
-                                            <Input name="dateOfBirth" type="date" />
-                                            <p className="text-[10px] text-muted-foreground italic">For age verification.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-1.5">
-                                        <Label className="text-xs font-bold">Gender</Label>
-                                        <Select name="gender">
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select gender" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Male">Male</SelectItem>
-                                                <SelectItem value="Female">Female</SelectItem>
-                                                <SelectItem value="Other">Other</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {/* Parent/Guardian Information Section */}
-                                <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-2 border-b pb-1">
-                                        <Users className="h-4 w-4 text-primary" />
-                                        <h3 className="font-heading font-bold text-sm">Parent/Guardian Information</h3>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground -mt-3">Provide details of parents or guardians for emergency contact.</p>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Father&apos;s Name</Label>
-                                            <Input name="fatherName" placeholder="e.g. John Smith" />
-                                            <p className="text-[10px] text-muted-foreground italic">Primary guardian name.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Mother&apos;s Name</Label>
-                                            <Input name="motherName" placeholder="e.g. Jane Smith" />
-                                            <p className="text-[10px] text-muted-foreground italic">Secondary guardian name.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Parent Phone</Label>
-                                            <Input name="parentPhone" placeholder="e.g. +91 9876543210" />
-                                            <p className="text-[10px] text-muted-foreground italic">Primary contact number.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Emergency Contact</Label>
-                                            <Input name="emergencyContact" placeholder="e.g. Uncle Robert" />
-                                            <p className="text-[10px] text-muted-foreground italic">Alternative emergency contact.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Student Contact Details Section */}
-                                <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-2 border-b pb-1">
-                                        <UserCircle className="h-4 w-4 text-primary" />
-                                        <h3 className="font-heading font-bold text-sm">Student Contact Details</h3>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground -mt-3">Additional contact information for the student.</p>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Student Email</Label>
-                                            <Input name="studentEmail" type="email" placeholder="e.g. alice@gmail.com" />
-                                            <p className="text-[10px] text-muted-foreground italic">Personal email address.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Student Phone</Label>
-                                            <Input name="studentPhone" placeholder="e.g. +91 9876543210" />
-                                            <p className="text-[10px] text-muted-foreground italic">Personal phone number.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Alternate Email</Label>
-                                            <Input name="alternateEmail" type="email" placeholder="e.g. backup@email.com" />
-                                            <p className="text-[10px] text-muted-foreground italic">Backup email address.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Alternate Phone</Label>
-                                            <Input name="alternatePhone" placeholder="e.g. +91 9876543210" />
-                                            <p className="text-[10px] text-muted-foreground italic">Backup phone number.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Academic Details Section */}
-                                <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-2 border-b pb-1">
-                                        <Filter className="h-4 w-4 text-primary" />
-                                        <h3 className="font-heading font-bold text-sm">Academic Details</h3>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground -mt-3">Assign class and academic year for enrollment.</p>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Class <span className="text-red-500">*</span></Label>
-                                            <Select name="classId" required>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Class" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {classes.map(c => (
-                                                        <SelectItem key={c.id} value={c.id}>
-                                                            {c.name} {c.section ? `(${c.section})` : ''} - {c.board.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <p className="text-[10px] text-muted-foreground italic">Current class assignment.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Academic Year</Label>
-                                            <Select name="academicYear" defaultValue="2025-26">
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Year" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="2025-26">2025-26</SelectItem>
-                                                    <SelectItem value="2024-25">2024-25</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <p className="text-[10px] text-muted-foreground italic">Enrollment year.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Other Details Section */}
-                                <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-2 border-b pb-1">
-                                        <Filter className="h-4 w-4 text-primary" />
-                                        <h3 className="font-heading font-bold text-sm">Other Details</h3>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground -mt-3">Additional background and address information.</p>
-
-                                    <div className="grid gap-1.5">
-                                        <Label className="text-xs font-bold">Address</Label>
-                                        <Input name="address" placeholder="e.g. 123 Main St, City, State, PIN" />
-                                        <p className="text-[10px] text-muted-foreground italic">Complete residential address.</p>
-                                    </div>
-
-                                    <div className="grid gap-1.5">
-                                        <Label className="text-xs font-bold">Previous School</Label>
-                                        <Input name="previousSchool" placeholder="e.g. ABC Public School" />
-                                        <p className="text-[10px] text-muted-foreground italic">School attended before enrollment.</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Status</Label>
-                                            <Select name="status" defaultValue="ACTIVE">
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Status" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="ACTIVE">Active</SelectItem>
-                                                    <SelectItem value="INACTIVE">Inactive</SelectItem>
-                                                    <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <p className="text-[10px] text-muted-foreground italic">Current enrollment status.</p>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-xs font-bold">Admin Comments</Label>
-                                            <Input name="adminComments" placeholder="e.g. Excellent student" />
-                                            <p className="text-[10px] text-muted-foreground italic">Internal notes for tracking.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </ScrollArea>
-                        <DialogFooter className="pt-4">
-                            <Button type="submit" form="student-form" className="w-full font-bold">Enroll Student</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <AddStudentForm classes={classes} />
             </div>
 
             {/* Filters Section */}
@@ -397,12 +170,11 @@ export default async function StudentsPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge className={`border-0 font-bold text-[10px] uppercase tracking-wide ${
-                                        student.studentProfile?.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-50' :
+                                    <Badge className={`border-0 font-bold text-[10px] uppercase tracking-wide ${student.studentProfile?.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-50' :
                                         student.studentProfile?.status === 'INACTIVE' ? 'bg-gray-50 text-gray-600 hover:bg-gray-50' :
-                                        student.studentProfile?.status === 'SUSPENDED' ? 'bg-red-50 text-red-600 hover:bg-red-50' :
-                                        'bg-emerald-50 text-emerald-600 hover:bg-emerald-50'
-                                    }`}>
+                                            student.studentProfile?.status === 'SUSPENDED' ? 'bg-red-50 text-red-600 hover:bg-red-50' :
+                                                'bg-emerald-50 text-emerald-600 hover:bg-emerald-50'
+                                        }`}>
                                         {student.studentProfile?.status || 'ACTIVE'}
                                     </Badge>
                                 </TableCell>
@@ -417,14 +189,14 @@ export default async function StudentsPage() {
                                                     <Edit2 className="h-4 w-4" />
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[600px]">
+                                            <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
                                                 <DialogHeader>
                                                     <DialogTitle className="font-heading text-xl">Edit Student</DialogTitle>
                                                     <DialogDescription>
                                                         Update student profile and enrollment details.
                                                     </DialogDescription>
                                                 </DialogHeader>
-                                                <ScrollArea className="max-h-[85vh] pr-4">
+                                                <ScrollArea className="flex-1 overflow-y-auto" style={{ maxHeight: '60vh' }}>
                                                     <form action={async (formData) => {
                                                         'use server';
                                                         await updateStudent(formData);

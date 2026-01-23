@@ -21,11 +21,11 @@ model User {
 }
 
 model StudentProfile {
-  id               String       @id @default(cuid())
-  userId           String       @unique
+  id               String           @id @default(cuid())
+  userId           String           @unique
   firstName        String?
   lastName         String?
-  rollNumber       String?      @unique
+  rollNumber       String?          @unique
   dateOfBirth      DateTime?
   gender           String?
   fatherName       String?
@@ -38,13 +38,14 @@ model StudentProfile {
   alternatePhone   String?
   address          String?
   previousSchool   String?
-  academicYear     String?      @default("2025-26")
+  academicYear     String?          @default("2025-26")
   classId          String?
-  status           String?      @default("ACTIVE")
+  status           String?          @default("ACTIVE")
   adminComments    String?
   attendance       Attendance[]
-  class            Class?       @relation(fields: [classId], references: [id])
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class            Class?           @relation(fields: [classId], references: [id])
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjects         StudentSubject[]
 }
 
 model TeacherProfile {
@@ -102,6 +103,17 @@ model Subject {
   class           Class               @relation(fields: [classId], references: [id], onDelete: Cascade)
   subjectMaster   SubjectMaster?      @relation(fields: [subjectMasterId], references: [id])
   allocations     TeacherAllocation[]
+  students        StudentSubject[]
+}
+
+model StudentSubject {
+  id        String         @id @default(cuid())
+  studentId String
+  subjectId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subjectId])
 }
 
 model Chapter {
