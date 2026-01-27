@@ -62,6 +62,8 @@ model TeacherProfile {
   previousInstitutions String?
   licenseNumber        String?
   allocations          TeacherAllocation[]
+  sessions             Session[]
+  sessionLogs          SessionLog[]
   user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -153,16 +155,34 @@ model Session {
   description String?
   startTime   DateTime
   endTime     DateTime
-  status      String       @default("SCHEDULED")
+  status      String       @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, PENDING_LOG, COMPLETED, CANCELLED
   classId     String
   subjectId   String
   chapterId   String?
   topicId     String?
+  teacherId   String?
   attendance  Attendance[]
+  sessionLog  SessionLog?
   topic       Topic?       @relation(fields: [topicId], references: [id])
   chapter     Chapter?     @relation(fields: [chapterId], references: [id])
   subject     Subject      @relation(fields: [subjectId], references: [id])
   class       Class        @relation(fields: [classId], references: [id])
+  teacher     TeacherProfile? @relation(fields: [teacherId], references: [id])
+}
+
+model SessionLog {
+  id            String         @id @default(cuid())
+  sessionId     String         @unique
+  teacherId     String
+  topicsCovered String         // Topics covered during session
+  homework      String?        // Homework assigned
+  studentNotes  String?        // Notes about student performance
+  challenges    String?        // Teaching challenges faced
+  nextSteps     String?        // Planned next steps
+  attachments   String?        // Comma-separated file URLs
+  createdAt     DateTime       @default(now())
+  session       Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  teacher       TeacherProfile @relation(fields: [teacherId], references: [id])
 }
 
 model Attendance {

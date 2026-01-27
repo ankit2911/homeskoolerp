@@ -17,9 +17,15 @@ import { useState } from "react";
 
 interface DeleteConfirmProps {
     onDelete: () => Promise<{ error?: string; success?: boolean }>;
+    title?: string;
+    description?: string;
 }
 
-export function DeleteConfirm({ onDelete }: DeleteConfirmProps) {
+export function DeleteConfirm({
+    onDelete,
+    title = "Are you absolutely sure?",
+    description = "This action cannot be undone. This will permanently delete this record and remove data from our servers."
+}: DeleteConfirmProps) {
     const [open, setOpen] = useState(false);
 
     const handleDelete = async () => {
@@ -36,9 +42,9 @@ export function DeleteConfirm({ onDelete }: DeleteConfirmProps) {
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{title}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this record and remove data from our servers.
+                        {description}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

@@ -276,7 +276,7 @@ export default async function TeachersPage({ searchParams }: PageProps) {
                                                                     {subjectMasters.length === 0 && (
                                                                         <p className="text-[10px] text-muted-foreground italic">No global subjects defined.</p>
                                                                     )}
-                                                                    {subjectMasters.map(sm => (
+                                                                    {subjectMasters.map((sm: { id: string; name: string; code: string }) => (
                                                                         <label key={sm.id} className="flex items-center gap-2 border px-3 py-1.5 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                                                                             <input
                                                                                 type="checkbox"

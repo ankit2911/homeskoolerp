@@ -10,36 +10,61 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Calendar } from 'lucide-react';
+import { Calendar, Plus } from 'lucide-react';
 import { SessionForm } from './session-form';
-import { type Class, type Session } from '@prisma/client';
 
-// Define ClassType to match SessionForm expectation
+// Type definitions matching SessionForm
 type Topic = { id: string; name: string };
 type Chapter = { id: string; name: string; topics: Topic[] };
 type Subject = { id: string; name: string; chapters: Chapter[] };
 type ClassType = {
     id: string;
     name: string;
+    section: string | null;
     board: { name: string };
     subjects: Subject[]
 };
+type TeacherType = {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    specialization: string | null;
+};
 
-export function CreateSessionDialog({ classes }: { classes: ClassType[] }) {
+type Session = {
+    id: string;
+    title: string;
+    description: string | null;
+    startTime: Date | string;
+    endTime: Date | string;
+    status: string;
+    classId: string;
+    subjectId: string;
+    chapterId: string | null;
+    topicId: string | null;
+    teacherId?: string | null;
+};
+
+export function CreateSessionDialog({ classes, teachers }: { classes: ClassType[]; teachers: TeacherType[] }) {
     const [open, setOpen] = useState(false);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button><Calendar className="mr-2 h-4 w-4" /> Schedule Session</Button>
+                <Button className="gap-2 font-bold">
+                    <Plus className="h-4 w-4" /> Schedule Session
+                </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Schedule New Session</DialogTitle>
-                    <DialogDescription>Create a new classroom session.</DialogDescription>
+                    <DialogTitle className="font-heading text-xl">Schedule New Session</DialogTitle>
+                    <DialogDescription>
+                        Create a new classroom session. Students will be notified.
+                    </DialogDescription>
                 </DialogHeader>
                 <SessionForm
                     classes={classes}
+                    teachers={teachers}
                     onClose={() => setOpen(false)}
                 />
             </DialogContent>
@@ -47,22 +72,33 @@ export function CreateSessionDialog({ classes }: { classes: ClassType[] }) {
     );
 }
 
-export function EditSessionDialog({ classes, session }: { classes: ClassType[]; session: Session }) {
-    const [open, setOpen] = useState(false);
-
+export function EditSessionDialog({
+    classes,
+    teachers,
+    session,
+    open,
+    onOpenChange
+}: {
+    classes: ClassType[];
+    teachers: TeacherType[];
+    session: Session;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}) {
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">Edit</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Edit Session</DialogTitle>
+                    <DialogTitle className="font-heading text-xl">Edit Session</DialogTitle>
+                    <DialogDescription>
+                        Update session details.
+                    </DialogDescription>
                 </DialogHeader>
                 <SessionForm
                     classes={classes}
-                    session={session}
-                    onClose={() => setOpen(false)}
+                    teachers={teachers}
+                    session={session as any}
+                    onClose={() => onOpenChange(false)}
                 />
             </DialogContent>
         </Dialog>
