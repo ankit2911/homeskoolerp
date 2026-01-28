@@ -91,6 +91,7 @@ model SubjectMaster {
   name     String    @unique
   code     String    @unique
   category String?   @default("primary")
+  isActive Boolean   @default(true)
   subjects Subject[]
 }
 

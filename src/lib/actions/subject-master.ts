@@ -12,7 +12,7 @@ export async function createSubjectMaster(formData: FormData) {
 
     try {
         await db.subjectMaster.create({
-            data: { name, code, category: category || 'primary' }
+            data: { name, code, category: category || 'primary', isActive: true }
         });
         revalidatePath('/admin/configuration');
         return { success: true };
@@ -43,6 +43,37 @@ export async function updateSubjectMaster(formData: FormData) {
     }
 }
 
+// Soft delete - deactivate subject instead of deleting
+export async function deactivateSubjectMaster(id: string) {
+    try {
+        await db.subjectMaster.update({
+            where: { id },
+            data: { isActive: false }
+        });
+        revalidatePath('/admin/configuration');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to deactivate global subject:', error);
+        return { error: 'Failed to deactivate global subject' };
+    }
+}
+
+// Reactivate a deactivated subject
+export async function reactivateSubjectMaster(id: string) {
+    try {
+        await db.subjectMaster.update({
+            where: { id },
+            data: { isActive: true }
+        });
+        revalidatePath('/admin/configuration');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to reactivate global subject:', error);
+        return { error: 'Failed to reactivate global subject' };
+    }
+}
+
+// Keep hard delete for admin use only (if needed)
 export async function deleteSubjectMaster(id: string) {
     try {
         await db.subjectMaster.delete({
@@ -52,6 +83,6 @@ export async function deleteSubjectMaster(id: string) {
         return { success: true };
     } catch (error) {
         console.error('Failed to delete global subject:', error);
-        return { error: 'Failed to delete global subject' };
+        return { error: 'Failed to delete global subject. It may have dependencies.' };
     }
 }

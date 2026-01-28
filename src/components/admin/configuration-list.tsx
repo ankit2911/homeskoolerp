@@ -22,11 +22,11 @@ import {
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit2, BookOpen, School, Layers, Search, RotateCcw, ChevronDown, ChevronRight, Eye } from 'lucide-react';
+import { Plus, Edit2, BookOpen, School, Layers, Search, RotateCcw, ChevronDown, ChevronRight, Eye, ToggleLeft, ToggleRight, Archive, RefreshCw } from 'lucide-react';
 import { DeleteConfirm } from '@/components/admin/delete-confirm';
 import { createBoard, updateBoard, deleteBoard } from '@/lib/actions/board';
 import { createClass, updateClass, deleteClass } from '@/lib/actions/class';
-import { createSubjectMaster, updateSubjectMaster, deleteSubjectMaster } from '@/lib/actions/subject-master';
+import { createSubjectMaster, updateSubjectMaster, deactivateSubjectMaster, reactivateSubjectMaster } from '@/lib/actions/subject-master';
 import { createSubject, updateSubject, deleteSubject } from '@/lib/actions/subject';
 import { ConfigurationTiles } from './configuration-tiles';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -64,13 +64,18 @@ type SubjectMaster = {
     name: string;
     code: string;
     category: string | null;
+    isActive: boolean;
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
     primary: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
     secondary: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
     elective: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    language: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+    cocurricular: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
 };
+
+const ALL_CATEGORIES = ['primary', 'secondary', 'elective', 'language', 'cocurricular'];
 
 const getCategoryColor = (category: string | null) => {
     return CATEGORY_COLORS[category || 'primary'] || CATEGORY_COLORS.primary;
@@ -191,7 +196,7 @@ export function ConfigurationList({
                                                 </div>
                                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{board.name}</span>
                                             </div>
-                                            <Badge variant="secondary" className="text-[10px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-sm">
+                                            <Badge variant="secondary" className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 shadow-sm">
                                                 {board.classes.length} classes
                                             </Badge>
                                         </div>
@@ -263,8 +268,8 @@ export function ConfigurationList({
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {['primary', 'secondary', 'elective'].map(category => {
-                                            const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category);
+                                        {ALL_CATEGORIES.map(category => {
+                                            const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category && sm.isActive !== false);
                                             if (categorySubjects.length === 0) return null;
                                             const colors = getCategoryColor(category);
 
@@ -359,6 +364,8 @@ export function ConfigurationList({
                                                 <SelectItem value="primary">Primary</SelectItem>
                                                 <SelectItem value="secondary">Secondary</SelectItem>
                                                 <SelectItem value="elective">Elective</SelectItem>
+                                                <SelectItem value="language">Language</SelectItem>
+                                                <SelectItem value="cocurricular">Co-curricular</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -367,15 +374,17 @@ export function ConfigurationList({
                             </form>
                         </div>
 
-                        {/* Subject List by Category */}
+                        {/* Active Subjects by Category */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 border-b pb-1">
-                                <BookOpen className="h-4 w-4 text-primary" />
-                                <h3 className="font-heading font-bold text-sm">Defined Subjects ({subjectMasters.length})</h3>
+                            <div className="flex items-center justify-between border-b pb-1">
+                                <div className="flex items-center gap-2">
+                                    <BookOpen className="h-4 w-4 text-primary" />
+                                    <h3 className="font-heading font-bold text-sm">Active Subjects ({subjectMasters.filter(sm => sm.isActive !== false).length})</h3>
+                                </div>
                             </div>
 
-                            {['primary', 'secondary', 'elective'].map(category => {
-                                const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category);
+                            {ALL_CATEGORIES.map(category => {
+                                const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category && sm.isActive !== false);
                                 if (categorySubjects.length === 0) return null;
                                 const colors = getCategoryColor(category);
 
@@ -387,19 +396,19 @@ export function ConfigurationList({
                                             </Badge>
                                             <span className="text-xs text-muted-foreground">({categorySubjects.length})</span>
                                         </div>
-                                        <div className="grid gap-1">
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                             {categorySubjects.map(sm => (
-                                                <div key={sm.id} className={`p-2.5 flex items-center justify-between rounded-lg border ${colors.border} ${colors.bg} hover:opacity-90 transition-opacity`}>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold">{sm.name}</span>
-                                                            <span className="text-[10px] font-mono text-muted-foreground">{sm.code}</span>
+                                                <div key={sm.id} className={`p-2 flex items-center justify-between rounded-lg border ${colors.border} ${colors.bg} hover:opacity-90 transition-opacity`}>
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-xs font-bold truncate" title={sm.name}>{sm.name}</span>
+                                                            <span className="text-[9px] font-mono text-muted-foreground truncate">{sm.code}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1">
+                                                    <div className="flex items-center shrink-0">
                                                         <Dialog>
                                                             <DialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-7 w-7"><Edit2 className="h-3.5 w-3.5" /></Button>
+                                                                <Button variant="ghost" size="icon" className="h-6 w-6"><Edit2 className="h-3 w-3" /></Button>
                                                             </DialogTrigger>
                                                             <DialogContent className="sm:max-w-[400px]">
                                                                 <DialogHeader><DialogTitle>Edit Subject</DialogTitle></DialogHeader>
@@ -425,6 +434,8 @@ export function ConfigurationList({
                                                                                 <SelectItem value="primary">Primary</SelectItem>
                                                                                 <SelectItem value="secondary">Secondary</SelectItem>
                                                                                 <SelectItem value="elective">Elective</SelectItem>
+                                                                                <SelectItem value="language">Language</SelectItem>
+                                                                                <SelectItem value="cocurricular">Co-curricular</SelectItem>
                                                                             </SelectContent>
                                                                         </Select>
                                                                     </div>
@@ -432,9 +443,17 @@ export function ConfigurationList({
                                                                 </form>
                                                             </DialogContent>
                                                         </Dialog>
-                                                        <DeleteConfirm onDelete={async () => {
-                                                            return await deleteSubjectMaster(sm.id);
-                                                        }} />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                                            title="Deactivate subject"
+                                                            onClick={async () => {
+                                                                await deactivateSubjectMaster(sm.id);
+                                                            }}
+                                                        >
+                                                            <Archive className="h-3 w-3" />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -443,12 +462,53 @@ export function ConfigurationList({
                                 );
                             })}
 
-                            {subjectMasters.length === 0 && (
+                            {subjectMasters.filter(sm => sm.isActive !== false).length === 0 && (
                                 <div className="p-8 text-center text-sm text-muted-foreground italic border rounded-xl bg-gray-50/50">
-                                    No global subjects defined yet. Add one above!
+                                    No active subjects defined yet. Add one above!
                                 </div>
                             )}
                         </div>
+
+                        {/* Inactive Subjects Section */}
+                        {subjectMasters.filter(sm => sm.isActive === false).length > 0 && (
+                            <div className="space-y-3 pt-4 border-t border-dashed">
+                                <div className="flex items-center gap-2">
+                                    <Archive className="h-4 w-4 text-gray-400" />
+                                    <h3 className="font-heading font-bold text-sm text-gray-500">Inactive Subjects ({subjectMasters.filter(sm => sm.isActive === false).length})</h3>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground -mt-2">These subjects are deactivated and won&apos;t appear in selections. You can reactivate them anytime.</p>
+
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[150px] overflow-y-auto pr-2">
+                                    {subjectMasters.filter(sm => sm.isActive === false).map(sm => {
+                                        const colors = getCategoryColor(sm.category);
+                                        return (
+                                            <div key={sm.id} className="p-2 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50/50 opacity-70 hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-xs font-medium text-gray-600 truncate" title={sm.name}>{sm.name}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[9px] font-mono text-muted-foreground truncate">{sm.code}</span>
+                                                            <Badge variant="outline" className="text-[8px] h-4 px-1">{sm.category || 'primary'}</Badge>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-6 text-[10px] font-bold text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 shrink-0"
+                                                    onClick={async () => {
+                                                        await reactivateSubjectMaster(sm.id);
+                                                    }}
+                                                >
+                                                    <RefreshCw className="h-3 w-3 mr-1" />
+                                                    Reactivate
+                                                </Button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -577,7 +637,7 @@ export function ConfigurationList({
                                                                     <div className="space-y-3">
                                                                         <Label className="text-xs font-bold">Assign Subjects</Label>
                                                                         <div className="flex flex-wrap gap-2">
-                                                                            {subjectMasters.map(sm => {
+                                                                            {subjectMasters.filter(sm => sm.isActive !== false).map(sm => {
                                                                                 const colors = getCategoryColor(sm.category);
                                                                                 return (
                                                                                     <label key={sm.id} className={`flex items-center gap-2 px-2.5 py-1 rounded-lg cursor-pointer border ${colors.border} ${colors.bg} hover:opacity-80 transition-opacity`}>
@@ -686,8 +746,8 @@ export function ConfigurationList({
                                                                         <div className="space-y-3 border-t pt-3">
                                                                             <Label className="text-xs font-bold">Manage Subjects</Label>
                                                                             <div className="space-y-3">
-                                                                                {['primary', 'secondary', 'elective'].map(category => {
-                                                                                    const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category);
+                                                                                {ALL_CATEGORIES.map(category => {
+                                                                                    const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category && sm.isActive !== false);
                                                                                     if (categorySubjects.length === 0) return null;
                                                                                     const colors = getCategoryColor(category);
 
@@ -748,8 +808,8 @@ export function ConfigurationList({
                                                                         </div>
                                                                     ) : (
                                                                         <div className="space-y-3">
-                                                                            {['primary', 'secondary', 'elective'].map(category => {
-                                                                                const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category);
+                                                                            {ALL_CATEGORIES.map(category => {
+                                                                                const categorySubjects = subjectMasters.filter(sm => (sm.category || 'primary') === category && sm.isActive !== false);
                                                                                 if (categorySubjects.length === 0) return null;
                                                                                 const colors = getCategoryColor(category);
 

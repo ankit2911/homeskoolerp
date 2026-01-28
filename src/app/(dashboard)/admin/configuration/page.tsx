@@ -13,7 +13,13 @@ export default async function ConfigurationPage({
         include: {
             classes: {
                 include: {
-                    subjects: true,
+                    subjects: {
+                        where: {
+                            subjectMaster: {
+                                isActive: true
+                            }
+                        }
+                    },
                     _count: { select: { students: true } }
                 }
             }
@@ -22,6 +28,13 @@ export default async function ConfigurationPage({
     });
 
     const subjectMasters = await db.subjectMaster.findMany({
+        select: {
+            id: true,
+            name: true,
+            code: true,
+            category: true,
+            isActive: true
+        },
         orderBy: { name: 'asc' }
     });
 

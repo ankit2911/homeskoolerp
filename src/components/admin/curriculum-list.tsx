@@ -77,9 +77,92 @@ export function CurriculumList({ boards }: CurriculumListProps) {
     const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
     const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
-    const toggleBoard = (id: string) => setExpandedBoards(prev => ({ ...prev, [id]: !prev[id] }));
-    const toggleClass = (id: string) => setExpandedClasses(prev => ({ ...prev, [id]: !prev[id] }));
-    const toggleSubject = (id: string) => setExpandedSubjects(prev => ({ ...prev, [id]: !prev[id] }));
+    // Helper to get all child IDs that need to be cleared when a parent is collapsed
+    const getClassIdsForBoard = (boardId: string) => {
+        const board = boards.find(b => b.id === boardId);
+        return board?.classes.map(c => c.id) || [];
+    };
+
+    const getSubjectIdsForClass = (classId: string) => {
+        for (const board of boards) {
+            const cls = board.classes.find(c => c.id === classId);
+            if (cls) return cls.subjects.map(s => s.id);
+        }
+        return [];
+    };
+
+    const getChapterIdsForSubject = (subjectId: string) => {
+        for (const board of boards) {
+            for (const cls of board.classes) {
+                const subj = cls.subjects.find(s => s.id === subjectId);
+                if (subj) return subj.chapters.map(ch => ch.id);
+            }
+        }
+        return [];
+    };
+
+    const toggleBoard = (id: string) => {
+        const isCurrentlyExpanded = expandedBoards[id];
+        if (isCurrentlyExpanded) {
+            // Collapsing: clear all child states
+            const classIds = getClassIdsForBoard(id);
+            const subjectIds = classIds.flatMap(cid => getSubjectIdsForClass(cid));
+            const chapterIds = subjectIds.flatMap(sid => getChapterIdsForSubject(sid));
+
+            setExpandedClasses(prev => {
+                const next = { ...prev };
+                classIds.forEach(cid => delete next[cid]);
+                return next;
+            });
+            setExpandedSubjects(prev => {
+                const next = { ...prev };
+                subjectIds.forEach(sid => delete next[sid]);
+                return next;
+            });
+            setExpandedChapters(prev => {
+                const next = { ...prev };
+                chapterIds.forEach(chid => delete next[chid]);
+                return next;
+            });
+        }
+        setExpandedBoards(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleClass = (id: string) => {
+        const isCurrentlyExpanded = expandedClasses[id];
+        if (isCurrentlyExpanded) {
+            // Collapsing: clear all child states
+            const subjectIds = getSubjectIdsForClass(id);
+            const chapterIds = subjectIds.flatMap(sid => getChapterIdsForSubject(sid));
+
+            setExpandedSubjects(prev => {
+                const next = { ...prev };
+                subjectIds.forEach(sid => delete next[sid]);
+                return next;
+            });
+            setExpandedChapters(prev => {
+                const next = { ...prev };
+                chapterIds.forEach(chid => delete next[chid]);
+                return next;
+            });
+        }
+        setExpandedClasses(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleSubject = (id: string) => {
+        const isCurrentlyExpanded = expandedSubjects[id];
+        if (isCurrentlyExpanded) {
+            // Collapsing: clear all child chapter states
+            const chapterIds = getChapterIdsForSubject(id);
+            setExpandedChapters(prev => {
+                const next = { ...prev };
+                chapterIds.forEach(chid => delete next[chid]);
+                return next;
+            });
+        }
+        setExpandedSubjects(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
     const toggleChapter = (id: string) => setExpandedChapters(prev => ({ ...prev, [id]: !prev[id] }));
 
     // Filtered data

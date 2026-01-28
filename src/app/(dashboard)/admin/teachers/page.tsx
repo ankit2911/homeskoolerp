@@ -72,6 +72,14 @@ export default async function TeachersPage({ searchParams }: PageProps) {
     }) as (User & { teacherProfile: TeacherProfile | null })[];
 
     const subjectMastersData = await db.subjectMaster.findMany({
+        where: { isActive: true },
+        select: {
+            id: true,
+            name: true,
+            code: true,
+            category: true,
+            isActive: true
+        },
         orderBy: { name: 'asc' }
     });
 

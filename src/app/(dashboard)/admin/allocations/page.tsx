@@ -9,6 +9,11 @@ export default async function AllocationsPage() {
                 orderBy: { name: 'asc' },
                 include: {
                     subjects: {
+                        where: {
+                            subjectMaster: {
+                                isActive: true
+                            }
+                        },
                         orderBy: { name: 'asc' }
                     }
                 }
@@ -17,7 +22,7 @@ export default async function AllocationsPage() {
         orderBy: { name: 'asc' }
     });
 
-    // Fetch all teachers
+    // Fetch all teachers with detailed profile
     const teachersData = await db.teacherProfile.findMany({
         include: {
             user: true
