@@ -77,7 +77,7 @@ Located in `src/lib/actions/` and `src/lib/actions.ts`:
 
 ## Common Patterns
 - **Data Fetching**: Server components fetch data directly with Prisma
-- **Forms**: Client components with `useFormState` and server actions
+- **Forms**: Client components with `useActionState` and server actions
 - **Error Handling**: Try-catch in actions, return error strings
 - **Role Checks**: Use `auth()` in server components for authorization
 - **Revalidation**: Call `revalidatePath()` after mutations
