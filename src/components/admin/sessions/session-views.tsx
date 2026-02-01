@@ -17,34 +17,10 @@ import {
     ChevronLeft, ChevronRight, Filter
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Session, ClassType, TeacherType } from './types';
 
 // Types
-type Session = {
-    id: string;
-    title: string;
-    description: string | null;
-    startTime: string | Date;
-    endTime: string | Date;
-    status: string;
-    class: { id: string; name: string; section: string | null; board: { name: string } };
-    subject: { id: string; name: string };
-    chapter?: { id: string; name: string } | null;
-    teacher?: { id: string; firstName: string | null; lastName: string | null } | null;
-};
 
-type ClassType = {
-    id: string;
-    name: string;
-    section: string | null;
-    board: { name: string };
-    subjects: { id: string; name: string }[];
-};
-
-type TeacherType = {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-};
 
 // Status config
 const STATUS_CONFIG: Record<string, { bg: string; color: string; label: string }> = {

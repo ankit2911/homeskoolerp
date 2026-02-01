@@ -12,38 +12,9 @@ import {
 } from "@/components/ui/dialog"
 import { Calendar, Plus } from 'lucide-react';
 import { SessionForm } from './session-form';
+import type { Session, ClassType, TeacherType } from './sessions/types';
 
-// Type definitions matching SessionForm
-type Topic = { id: string; name: string };
-type Chapter = { id: string; name: string; topics: Topic[] };
-type Subject = { id: string; name: string; chapters: Chapter[] };
-type ClassType = {
-    id: string;
-    name: string;
-    section: string | null;
-    board: { name: string };
-    subjects: Subject[]
-};
-type TeacherType = {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    specialization: string | null;
-};
 
-type Session = {
-    id: string;
-    title: string;
-    description: string | null;
-    startTime: Date | string;
-    endTime: Date | string;
-    status: string;
-    classId: string;
-    subjectId: string;
-    chapterId: string | null;
-    topicId: string | null;
-    teacherId?: string | null;
-};
 
 export function CreateSessionDialog({ classes, teachers }: { classes: ClassType[]; teachers: TeacherType[] }) {
     const [open, setOpen] = useState(false);

@@ -461,7 +461,7 @@ export function CurriculumList({ boards }: CurriculumListProps) {
                                                                         <DialogTitle className="font-heading">Add Chapter to {subj.name}</DialogTitle>
                                                                         <DialogDescription>Create a new chapter for this subject.</DialogDescription>
                                                                     </DialogHeader>
-                                                                    <form action={createChapter} className="space-y-4 pt-4">
+                                                                    <form action={async (formData) => { await createChapter(formData); }} className="space-y-4 pt-4">
                                                                         <input type="hidden" name="subjectId" value={subj.id} />
                                                                         <div className="grid gap-2">
                                                                             <Label className="text-xs font-bold">Chapter Name <span className="text-red-500">*</span></Label>
@@ -508,7 +508,7 @@ export function CurriculumList({ boards }: CurriculumListProps) {
                                                                             </DialogTrigger>
                                                                             <DialogContent className="sm:max-w-[400px]">
                                                                                 <DialogHeader><DialogTitle>Edit Chapter</DialogTitle></DialogHeader>
-                                                                                <form action={updateChapter} className="space-y-4 pt-4">
+                                                                                <form action={async (formData) => { await updateChapter(formData); }} className="space-y-4 pt-4">
                                                                                     <input type="hidden" name="id" value={chapter.id} />
                                                                                     <div className="grid gap-2">
                                                                                         <Label className="font-bold">Chapter Name</Label>
@@ -530,7 +530,7 @@ export function CurriculumList({ boards }: CurriculumListProps) {
                                                                                     <DialogTitle className="font-heading">Add Topic to {chapter.name}</DialogTitle>
                                                                                     <DialogDescription>Create a new topic with an optional description.</DialogDescription>
                                                                                 </DialogHeader>
-                                                                                <form action={createTopic} className="space-y-4 pt-4">
+                                                                                <form action={async (formData) => { await createTopic(formData); }} className="space-y-4 pt-4">
                                                                                     <input type="hidden" name="chapterId" value={chapter.id} />
                                                                                     <div className="grid gap-2">
                                                                                         <Label className="text-xs font-bold">Topic Name <span className="text-red-500">*</span></Label>
@@ -584,7 +584,7 @@ export function CurriculumList({ boards }: CurriculumListProps) {
                                                                                 </DialogTrigger>
                                                                                 <DialogContent className="sm:max-w-[500px]">
                                                                                     <DialogHeader><DialogTitle>Edit Topic</DialogTitle></DialogHeader>
-                                                                                    <form action={updateTopic} className="space-y-4 pt-4">
+                                                                                    <form action={async (formData) => { await updateTopic(formData); }} className="space-y-4 pt-4">
                                                                                         <input type="hidden" name="id" value={topic.id} />
                                                                                         <div className="grid gap-2">
                                                                                             <Label className="font-bold">Topic Name</Label>

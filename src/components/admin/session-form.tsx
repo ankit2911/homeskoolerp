@@ -15,42 +15,14 @@ import {
 import { createSession, updateSession } from '@/lib/actions/session';
 import { DialogFooter } from '@/components/ui/dialog';
 import { User, Clock } from 'lucide-react';
+import type { Session, ClassType, TeacherType } from './sessions/types';
 
-// Types
-type Topic = { id: string; name: string };
-type Chapter = { id: string; name: string; topics: Topic[] };
-type Subject = { id: string; name: string; chapters: Chapter[] };
-type ClassType = {
-    id: string;
-    name: string;
-    section: string | null;
-    board: { name: string };
-    subjects: Subject[]
-};
-type TeacherType = {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    specialization: string | null;
-};
-type SessionType = {
-    id: string;
-    title: string;
-    description?: string | null;
-    classId: string;
-    subjectId: string;
-    chapterId?: string | null;
-    topicId?: string | null;
-    teacherId?: string | null;
-    startTime: Date | string;
-    endTime: Date | string;
-    status: string;
-};
+
 
 type SessionFormProps = {
     classes: ClassType[];
     teachers?: TeacherType[];
-    session?: SessionType;
+    session?: Session;
     onClose?: () => void;
 };
 
