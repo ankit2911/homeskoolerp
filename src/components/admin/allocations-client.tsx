@@ -776,7 +776,7 @@ function BulkAllocationDialog({
                                 <div className="flex justify-end pt-2">
                                     <Button
                                         variant="outline"
-                                        size="xs"
+                                        size="sm"
                                         onClick={() => setSelectedClasses(filteredClasses.map(c => c.id))}
                                     >
                                         Select All
