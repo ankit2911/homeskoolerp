@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { ResourcesClient } from '@/components/admin/resources-client';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ResourcesPage() {
     const resources = await db.resource.findMany({
         include: {

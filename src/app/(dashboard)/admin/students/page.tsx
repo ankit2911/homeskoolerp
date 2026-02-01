@@ -35,6 +35,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AddStudentForm } from '@/components/admin/student-form-client';
 import { EditStudentForm } from '@/components/admin/edit-student-form';
 
+export const dynamic = 'force-dynamic';
+
 export default async function StudentsPage() {
     const students = await db.user.findMany({
         where: { role: 'STUDENT' },

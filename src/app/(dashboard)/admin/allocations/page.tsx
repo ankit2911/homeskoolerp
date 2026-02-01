@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { AllocationsClient } from '@/components/admin/allocations-client';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AllocationsPage() {
     // Fetch boards with classes and subjects
     const boardsData = await db.board.findMany({

@@ -10,6 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 const STATUS_COLORS: Record<string, string> = {
     SCHEDULED: 'text-blue-600 bg-blue-50',
     IN_PROGRESS: 'text-orange-600 bg-orange-50',

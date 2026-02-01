@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { CurriculumList } from '@/components/admin/curriculum-list';
 
+export const dynamic = 'force-dynamic';
+
 // Type for the aggregated curriculum structure
 type AggregatedTopic = {
     id: string;

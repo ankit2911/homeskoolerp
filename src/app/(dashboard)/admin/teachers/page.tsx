@@ -37,6 +37,8 @@ interface PageProps {
     }>;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function TeachersPage({ searchParams }: PageProps) {
     const { qualification, specialization, experience } = await searchParams;
 

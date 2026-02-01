@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { SessionsPageClient } from '@/components/admin/sessions/sessions-page-client';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SessionsPage() {
     // Fetch sessions with related data
     const sessionsData = await db.session.findMany({
