@@ -10,13 +10,22 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Calendar, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { SessionForm } from './session-form';
-import type { Session, ClassType, TeacherType } from './sessions/types';
+import type { Session, ClassType, TeacherType, AllocationType } from './sessions/types';
 
+type BoardType = { id: string; name: string };
+type ResourceType = { id: string; title: string; type: string; classId: string; subjectId: string; topicId: string | null };
 
+type DialogProps = {
+    classes: ClassType[];
+    boards: BoardType[];
+    teachers: TeacherType[];
+    allocations: AllocationType[];
+    resources: ResourceType[];
+};
 
-export function CreateSessionDialog({ classes, teachers }: { classes: ClassType[]; teachers: TeacherType[] }) {
+export function CreateSessionDialog({ classes, boards, teachers, allocations, resources }: DialogProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -35,7 +44,10 @@ export function CreateSessionDialog({ classes, teachers }: { classes: ClassType[
                 </DialogHeader>
                 <SessionForm
                     classes={classes}
+                    boards={boards}
                     teachers={teachers}
+                    allocations={allocations}
+                    resources={resources}
                     onClose={() => setOpen(false)}
                 />
             </DialogContent>
@@ -45,13 +57,14 @@ export function CreateSessionDialog({ classes, teachers }: { classes: ClassType[
 
 export function EditSessionDialog({
     classes,
+    boards,
     teachers,
+    allocations,
+    resources,
     session,
     open,
     onOpenChange
-}: {
-    classes: ClassType[];
-    teachers: TeacherType[];
+}: DialogProps & {
     session: Session;
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -67,7 +80,10 @@ export function EditSessionDialog({
                 </DialogHeader>
                 <SessionForm
                     classes={classes}
+                    boards={boards}
                     teachers={teachers}
+                    allocations={allocations}
+                    resources={resources}
                     session={session as any}
                     onClose={() => onOpenChange(false)}
                 />

@@ -169,27 +169,76 @@ export async function submitSessionLog(formData: FormData) {
     const teacherId = formData.get('teacherId') as string;
     const topicsCovered = formData.get('topicsCovered') as string;
     const homework = formData.get('homework') as string || null;
-    const studentNotes = formData.get('studentNotes') as string || null;
+    const classNotes = formData.get('classNotes') as string || null;
     const challenges = formData.get('challenges') as string || null;
     const nextSteps = formData.get('nextSteps') as string || null;
+    const studentNotesJson = formData.get('studentNotes') as string || '[]';
 
     if (!sessionId || !teacherId || !topicsCovered) {
         return { error: 'Session ID, Teacher ID, and Topics Covered are required.' };
     }
 
     try {
-        // Create the log
-        await db.sessionLog.create({
-            data: {
-                sessionId,
-                teacherId,
-                topicsCovered,
-                homework,
-                studentNotes,
-                challenges,
-                nextSteps
-            }
+        // Check if log already exists
+        const existingLog = await db.sessionLog.findUnique({
+            where: { sessionId }
         });
+
+        let logId: string;
+
+        if (existingLog) {
+            // Update existing log
+            const updated = await db.sessionLog.update({
+                where: { sessionId },
+                data: {
+                    topicsCovered,
+                    homework,
+                    classNotes,
+                    challenges,
+                    nextSteps
+                }
+            });
+            logId = updated.id;
+        } else {
+            // Create new log
+            const created = await db.sessionLog.create({
+                data: {
+                    sessionId,
+                    teacherId,
+                    topicsCovered,
+                    homework,
+                    classNotes,
+                    challenges,
+                    nextSteps
+                }
+            });
+            logId = created.id;
+        }
+
+        // Handle student notes
+        const studentNotes: Array<{ studentId: string; note: string; flag?: string }> = JSON.parse(studentNotesJson);
+        for (const sn of studentNotes) {
+            if (sn.note || sn.flag) {
+                await db.studentSessionNote.upsert({
+                    where: {
+                        sessionLogId_studentId: {
+                            sessionLogId: logId,
+                            studentId: sn.studentId
+                        }
+                    },
+                    create: {
+                        sessionLogId: logId,
+                        studentId: sn.studentId,
+                        note: sn.note,
+                        flag: sn.flag || null
+                    },
+                    update: {
+                        note: sn.note,
+                        flag: sn.flag || null
+                    }
+                });
+            }
+        }
 
         // Update session status to COMPLETED
         await db.session.update({

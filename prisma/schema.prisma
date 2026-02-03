@@ -46,6 +46,7 @@ model StudentProfile {
   class            Class?           @relation(fields: [classId], references: [id])
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   subjects         StudentSubject[]
+  sessionNotes     StudentSessionNote[]
 }
 
 model TeacherProfile {
@@ -172,18 +173,34 @@ model Session {
 }
 
 model SessionLog {
-  id            String         @id @default(cuid())
-  sessionId     String         @unique
+  id            String               @id @default(cuid())
+  sessionId     String               @unique
   teacherId     String
-  topicsCovered String         // Topics covered during session
-  homework      String?        // Homework assigned
-  studentNotes  String?        // Notes about student performance
-  challenges    String?        // Teaching challenges faced
-  nextSteps     String?        // Planned next steps
-  attachments   String?        // Comma-separated file URLs
-  createdAt     DateTime       @default(now())
-  session       Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  teacher       TeacherProfile @relation(fields: [teacherId], references: [id])
+  topicsCovered String               // Topics covered during session
+  homework      String?              // Homework assigned
+  classNotes    String?              // General notes about class performance
+  challenges    String?              // Teaching challenges faced
+  nextSteps     String?              // Planned next steps
+  attachments   String?              // Comma-separated file URLs
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  session       Session              @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  teacher       TeacherProfile       @relation(fields: [teacherId], references: [id])
+  studentNotes  StudentSessionNote[]
+}
+
+model StudentSessionNote {
+  id           String         @id @default(cuid())
+  sessionLogId String
+  studentId    String
+  note         String         // Teacher's observation for this student
+  flag         String?        // e.g., "NEEDS_ATTENTION", "EXCELLENT", "ABSENT"
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  sessionLog   SessionLog     @relation(fields: [sessionLogId], references: [id], onDelete: Cascade)
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionLogId, studentId])
 }
 
 model Attendance {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/select"
 import {
     Clock, Calendar, List, Grid3X3, Edit2, User,
-    ChevronLeft, ChevronRight, Filter
+    ChevronLeft, ChevronRight, Filter, Play, FileText, CheckCircle, XCircle
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { startSession, endSession, cancelSession } from '@/lib/actions/session';
 import type { Session, ClassType, TeacherType } from './types';
 
 // Types
@@ -37,18 +38,39 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function formatTime(date: string | Date) {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 function formatDate(date: string | Date) {
-    return new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // Compact Grid View
-function SessionGrid({ sessions, onEdit }: { sessions: Session[]; onEdit: (s: Session) => void }) {
+function SessionGrid({ sessions, onEdit, onAddLog }: { sessions: Session[]; onEdit: (s: Session) => void; onAddLog?: (s: Session) => void }) {
+    const [isPending, startTransition] = useTransition();
+
     if (sessions.length === 0) {
         return <div className="text-center py-10 text-muted-foreground">No sessions found.</div>;
     }
+
+    const handleStart = (e: React.MouseEvent, session: Session) => {
+        e.stopPropagation();
+        startTransition(async () => {
+            await startSession(session.id);
+        });
+    };
+
+    const handleAddLog = (e: React.MouseEvent, session: Session) => {
+        e.stopPropagation();
+        onAddLog?.(session);
+    };
+
+    const handleComplete = (e: React.MouseEvent, session: Session) => {
+        e.stopPropagation();
+        startTransition(async () => {
+            await endSession(session.id);
+        });
+    };
 
     return (
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -78,7 +100,22 @@ function SessionGrid({ sessions, onEdit }: { sessions: Session[]; onEdit: (s: Se
                                 <span>{session.teacher.firstName} {session.teacher.lastName}</span>
                             </div>
                         )}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity pt-1 border-t flex justify-end">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity pt-1 border-t flex justify-end gap-1">
+                            {session.status === 'SCHEDULED' && (
+                                <Button variant="ghost" size="sm" className="h-6 text-xs text-green-600" onClick={(e) => handleStart(e, session)} disabled={isPending}>
+                                    <Play className="h-3 w-3 mr-1" /> Start
+                                </Button>
+                            )}
+                            {session.status === 'IN_PROGRESS' && (
+                                <Button variant="ghost" size="sm" className="h-6 text-xs text-yellow-600" onClick={(e) => handleComplete(e, session)} disabled={isPending}>
+                                    <CheckCircle className="h-3 w-3 mr-1" /> End
+                                </Button>
+                            )}
+                            {session.status === 'PENDING_LOG' && (
+                                <Button variant="ghost" size="sm" className="h-6 text-xs text-orange-600" onClick={(e) => handleAddLog(e, session)}>
+                                    <FileText className="h-3 w-3 mr-1" /> Add Log
+                                </Button>
+                            )}
                             <Button variant="ghost" size="sm" className="h-6 text-xs">
                                 <Edit2 className="h-3 w-3 mr-1" /> Edit
                             </Button>
@@ -121,6 +158,7 @@ function SessionList({ sessions, onEdit }: { sessions: Session[]; onEdit: (s: Se
 // Calendar View
 function SessionCalendar({ sessions, onEdit }: { sessions: Session[]; onEdit: (s: Session) => void }) {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
@@ -139,34 +177,56 @@ function SessionCalendar({ sessions, onEdit }: { sessions: Session[]; onEdit: (s
         return map;
     }, [sessions]);
 
+    // Get unique times for a day
+    const getTimeSlots = (daySessions: Session[]) => {
+        const times: Record<string, number> = {};
+        daySessions.forEach(s => {
+            const time = formatTime(s.startTime);
+            times[time] = (times[time] || 0) + 1;
+        });
+        return Object.entries(times).sort((a, b) => a[0].localeCompare(b[0]));
+    };
+
     const days = [];
     for (let i = 0; i < startDayOfWeek; i++) {
-        days.push(<div key={`e-${i}`} className="h-16 bg-muted/20 rounded" />);
+        days.push(<div key={`e-${i}`} className="h-20 bg-muted/20 rounded" />);
     }
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
         const key = date.toDateString();
         const daySessions = sessionsByDate[key] || [];
         const isToday = new Date().toDateString() === key;
+        const isSelected = selectedDate === key;
+        const timeSlots = getTimeSlots(daySessions);
 
         days.push(
-            <div key={day} className={`h-16 p-1 rounded border text-xs ${isToday ? 'border-primary bg-primary/5' : 'border-muted/50'} overflow-hidden`}>
+            <div
+                key={day}
+                className={`h-20 p-1 rounded border text-xs cursor-pointer transition-colors
+                    ${isToday ? 'border-primary bg-primary/5' : 'border-muted/50'}
+                    ${isSelected ? 'ring-2 ring-primary' : ''}
+                    ${daySessions.length > 0 ? 'hover:bg-muted/30' : ''}
+                    overflow-hidden`}
+                onClick={() => daySessions.length > 0 && setSelectedDate(isSelected ? null : key)}
+            >
                 <div className={`font-bold ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>{day}</div>
-                <div className="space-y-0.5">
-                    {daySessions.slice(0, 2).map(s => (
-                        <div
-                            key={s.id}
-                            className="text-[9px] px-1 bg-primary/10 text-primary rounded truncate cursor-pointer hover:bg-primary/20"
-                            onClick={() => onEdit(s)}
-                        >
-                            {formatTime(s.startTime)}
+                <div className="space-y-0.5 mt-0.5">
+                    {timeSlots.slice(0, 2).map(([time, count]) => (
+                        <div key={time} className="flex items-center justify-between text-[9px] px-1 bg-primary/10 text-primary rounded">
+                            <span>{time}</span>
+                            {count > 1 && <span className="bg-primary text-white px-1 rounded-full text-[8px]">{count}</span>}
                         </div>
                     ))}
-                    {daySessions.length > 2 && <div className="text-[9px] text-muted-foreground">+{daySessions.length - 2}</div>}
+                    {timeSlots.length > 2 && (
+                        <div className="text-[9px] text-muted-foreground text-center">+{timeSlots.length - 2} more</div>
+                    )}
                 </div>
             </div>
         );
     }
+
+    // Get sessions for selected date
+    const selectedSessions = selectedDate ? sessionsByDate[selectedDate] || [] : [];
 
     return (
         <div className="space-y-3">
@@ -174,7 +234,7 @@ function SessionCalendar({ sessions, onEdit }: { sessions: Session[]; onEdit: (s
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <h2 className="font-bold">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
+                <h2 className="font-bold">{currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</h2>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
                     <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -185,6 +245,40 @@ function SessionCalendar({ sessions, onEdit }: { sessions: Session[]; onEdit: (s
                 ))}
                 {days}
             </div>
+
+            {/* Selected day sessions list */}
+            {selectedDate && selectedSessions.length > 0 && (
+                <div className="border rounded-lg p-3 bg-muted/30">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-sm">
+                            {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </h3>
+                        <Badge variant="outline" className="text-xs">{selectedSessions.length} session{selectedSessions.length > 1 ? 's' : ''}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                        {selectedSessions.map(s => (
+                            <div
+                                key={s.id}
+                                className="flex items-center justify-between p-2 bg-background rounded border cursor-pointer hover:bg-muted/50"
+                                onClick={() => onEdit(s)}
+                            >
+                                <div>
+                                    <div className="font-medium text-xs">{s.title}</div>
+                                    <div className="text-[10px] text-muted-foreground">
+                                        {formatTime(s.startTime)} • {s.class.name}{s.class.section} • {s.subject.name}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge status={s.status} />
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs">
+                                        <Edit2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -204,70 +298,118 @@ function SessionFilters({
     const selectedClass = classes.find(c => c.id === filters.classId);
     const subjects = selectedClass?.subjects || [];
 
+    // Quick date presets
+    const today = new Date().toISOString().split('T')[0];
+    const getWeekStart = () => {
+        const d = new Date();
+        d.setDate(d.getDate() - d.getDay());
+        return d.toISOString().split('T')[0];
+    };
+
     return (
-        <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/30 rounded-lg border">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+        <div className="space-y-2">
+            {/* Quick presets */}
+            <div className="flex flex-wrap items-center gap-1">
+                <Button
+                    variant={filters.date === today ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => onChange({ ...filters, date: filters.date === today ? '' : today })}
+                >
+                    Today
+                </Button>
+                <Button
+                    variant={filters.status === 'PENDING_LOG' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs text-yellow-600"
+                    onClick={() => onChange({ ...filters, status: filters.status === 'PENDING_LOG' ? 'all' : 'PENDING_LOG' })}
+                >
+                    Needs Log
+                </Button>
+                <Button
+                    variant={filters.status === 'SCHEDULED' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs text-blue-600"
+                    onClick={() => onChange({ ...filters, status: filters.status === 'SCHEDULED' ? 'all' : 'SCHEDULED' })}
+                >
+                    Upcoming
+                </Button>
+                <Button
+                    variant={filters.status === 'IN_PROGRESS' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs text-orange-600"
+                    onClick={() => onChange({ ...filters, status: filters.status === 'IN_PROGRESS' ? 'all' : 'IN_PROGRESS' })}
+                >
+                    Live Now
+                </Button>
+            </div>
 
-            <Input
-                type="date"
-                className="w-[140px] h-8 text-xs"
-                value={filters.date}
-                onChange={(e) => onChange({ ...filters, date: e.target.value })}
-            />
+            {/* Detailed filters */}
+            <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/30 rounded-lg border">
+                <Filter className="h-4 w-4 text-muted-foreground" />
 
-            <Select value={filters.status} onValueChange={(v) => onChange({ ...filters, status: v })}>
-                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-            </Select>
+                <Input
+                    type="date"
+                    className="w-[140px] h-8 text-xs"
+                    value={filters.date}
+                    onChange={(e) => onChange({ ...filters, date: e.target.value })}
+                />
 
-            <Select value={filters.classId} onValueChange={(v) => onChange({ ...filters, classId: v, subjectId: 'all' })}>
-                <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Class" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Classes</SelectItem>
-                    {classes.map(c => (
-                        <SelectItem key={c.id} value={c.id}>
-                            {c.name}{c.section ? ` (${c.section})` : ''}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-
-            {filters.classId !== 'all' && subjects.length > 0 && (
-                <Select value={filters.subjectId} onValueChange={(v) => onChange({ ...filters, subjectId: v })}>
-                    <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Subject" /></SelectTrigger>
+                <Select value={filters.status} onValueChange={(v) => onChange({ ...filters, status: v })}>
+                    <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Subjects</SelectItem>
-                        {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                        <SelectItem value="PENDING_LOG">Pending Log</SelectItem>
+                        <SelectItem value="COMPLETED">Completed</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
                     </SelectContent>
                 </Select>
-            )}
 
-            <Select value={filters.teacherId} onValueChange={(v) => onChange({ ...filters, teacherId: v })}>
-                <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Teacher" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Teachers</SelectItem>
-                    {teachers.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+                <Select value={filters.classId} onValueChange={(v) => onChange({ ...filters, classId: v, subjectId: 'all' })}>
+                    <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Class" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Classes</SelectItem>
+                        {classes.map(c => (
+                            <SelectItem key={c.id} value={c.id}>
+                                {c.name}{c.section ? ` (${c.section})` : ''}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-            {(filters.status !== 'all' || filters.classId !== 'all' || filters.teacherId !== 'all' || filters.date) && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={() => onChange({ status: 'all', classId: 'all', subjectId: 'all', teacherId: 'all', date: '' })}
-                >
-                    Clear
-                </Button>
-            )}
+                {filters.classId !== 'all' && subjects.length > 0 && (
+                    <Select value={filters.subjectId} onValueChange={(v) => onChange({ ...filters, subjectId: v })}>
+                        <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Subject" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Subjects</SelectItem>
+                            {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                )}
+
+                <Select value={filters.teacherId} onValueChange={(v) => onChange({ ...filters, teacherId: v })}>
+                    <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Teacher" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Teachers</SelectItem>
+                        {teachers.map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                {(filters.status !== 'all' || filters.classId !== 'all' || filters.teacherId !== 'all' || filters.date) && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={() => onChange({ status: 'all', classId: 'all', subjectId: 'all', teacherId: 'all', date: '' })}
+                    >
+                        Clear All
+                    </Button>
+                )}
+            </div>
         </div>
     );
 }
@@ -277,12 +419,14 @@ export function SessionsView({
     sessions,
     classes,
     teachers = [],
-    onEdit
+    onEdit,
+    onAddLog
 }: {
     sessions: Session[];
     classes: ClassType[];
     teachers?: TeacherType[];
     onEdit: (session: Session) => void;
+    onAddLog?: (session: Session) => void;
 }) {
     const [view, setView] = useState<'grid' | 'list' | 'calendar'>('grid');
     const [filters, setFilters] = useState({ status: 'all', classId: 'all', subjectId: 'all', teacherId: 'all', date: '' });
@@ -334,7 +478,7 @@ export function SessionsView({
             </div>
 
             {/* Views */}
-            {view === 'grid' && <SessionGrid sessions={filtered} onEdit={onEdit} />}
+            {view === 'grid' && <SessionGrid sessions={filtered} onEdit={onEdit} onAddLog={onAddLog} />}
             {view === 'list' && <SessionList sessions={filtered} onEdit={onEdit} />}
             {view === 'calendar' && <SessionCalendar sessions={filtered} onEdit={onEdit} />}
         </div>

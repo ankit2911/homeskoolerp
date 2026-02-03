@@ -54,3 +54,9 @@ export type Session = {
     chapter?: { id: string; name: string } | null;
     teacher?: { id: string; firstName: string | null; lastName: string | null } | null;
 };
+
+export type AllocationType = {
+    teacherId: string;
+    classId: string;
+    subjectId: string;
+};
