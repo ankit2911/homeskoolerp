@@ -46,3 +46,4 @@ deno.lock
 # sqlite
 *.db
 *.db-journal
+.env*.local
