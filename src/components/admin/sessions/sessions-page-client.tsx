@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { SessionsView } from '@/components/admin/sessions/session-views';
 import { CreateSessionDialog, EditSessionDialog } from '@/components/admin/session-dialogs';
+import { BulkSessionDialog } from '@/components/admin/sessions/bulk-session-dialog';
 import { SessionLogDialog } from '@/components/admin/sessions/session-log-dialog';
 import type { Session, ClassType, TeacherType, AllocationType } from './types';
 
@@ -48,13 +49,16 @@ export function SessionsPageClient({
                     <h1 className="text-3xl font-bold tracking-tight">Sessions</h1>
                     <p className="text-sm text-muted-foreground">Manage and track classroom sessions</p>
                 </div>
-                <CreateSessionDialog
-                    classes={classes}
-                    boards={boards}
-                    teachers={teachers}
-                    allocations={allocations}
-                    resources={resources}
-                />
+                <div className="flex items-center gap-2">
+                    <BulkSessionDialog />
+                    <CreateSessionDialog
+                        classes={classes}
+                        boards={boards}
+                        teachers={teachers}
+                        allocations={allocations}
+                        resources={resources}
+                    />
+                </div>
             </div>
 
             <SessionsView

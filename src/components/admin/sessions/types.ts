@@ -60,3 +60,11 @@ export type AllocationType = {
     classId: string;
     subjectId: string;
 };
+
+export const SESSION_STATUS = {
+    SCHEDULED: 'SCHEDULED',
+    IN_PROGRESS: 'IN_PROGRESS',
+    PENDING_LOG: 'PENDING_LOG',
+    COMPLETED: 'COMPLETED',
+    CANCELLED: 'CANCELLED'
+} as const;

@@ -2,15 +2,7 @@
 
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-
-// Session Statuses
-export const SESSION_STATUS = {
-    SCHEDULED: 'SCHEDULED',
-    IN_PROGRESS: 'IN_PROGRESS',
-    PENDING_LOG: 'PENDING_LOG',
-    COMPLETED: 'COMPLETED',
-    CANCELLED: 'CANCELLED'
-} as const;
+import { SESSION_STATUS } from '@/components/admin/sessions/types';
 
 export async function createSession(formData: FormData) {
     const title = formData.get('title') as string;
