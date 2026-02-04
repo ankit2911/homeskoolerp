@@ -50,7 +50,12 @@ export function SessionsPageClient({
                     <p className="text-sm text-muted-foreground">Manage and track classroom sessions</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <BulkSessionDialog />
+                    <BulkSessionDialog
+                        classes={classes}
+                        boards={boards}
+                        teachers={teachers}
+                        allocations={allocations}
+                    />
                     <CreateSessionDialog
                         classes={classes}
                         boards={boards}

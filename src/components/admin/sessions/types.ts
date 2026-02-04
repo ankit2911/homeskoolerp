@@ -68,3 +68,26 @@ export const SESSION_STATUS = {
     COMPLETED: 'COMPLETED',
     CANCELLED: 'CANCELLED'
 } as const;
+
+// Bulk session types
+export type BulkSessionInput = {
+    boardId: string;
+    boardName: string;
+    classId: string;
+    className: string;
+    classSection: string | null;
+    subjectId: string;
+    subjectName: string;
+    chapterId?: string | null;
+    topicId?: string | null;
+    teacherId?: string | null;
+    startTime: string; // ISO string
+    duration: number; // minutes
+};
+
+export type BulkSessionPreview = BulkSessionInput & {
+    id: string;
+    title: string;
+    endTime: string;
+    teacherName: string;
+};
