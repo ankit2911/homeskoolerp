@@ -667,14 +667,16 @@ export function BulkSessionDialog({ classes, boards, teachers, allocations }: Bu
                     )}
 
                     {step === 'success' && (
-                        <div className="flex flex-col items-center justify-center py-10 gap-4">
-                            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                                <CheckCircle2 className="h-10 w-10 text-green-600" />
+                        <div className="flex flex-col items-center justify-center py-12 gap-5 animate-in fade-in-0 zoom-in-95 duration-300">
+                            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center shadow-sm">
+                                <CheckCircle2 className="h-12 w-12 text-green-600" />
                             </div>
-                            <div className="text-center">
-                                <h3 className="text-lg font-bold">Sessions Created!</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    {createdCount} sessions have been scheduled.
+                            <div className="text-center space-y-2">
+                                <h3 className="text-xl font-bold text-green-800">All Done!</h3>
+                                <p className="text-sm text-muted-foreground max-w-xs">
+                                    {createdCount} {createdCount === 1 ? 'session' : 'sessions'} planned successfully.
+                                    <br />
+                                    <span className="text-xs">You can edit them anytime from the sessions list.</span>
                                 </p>
                             </div>
                         </div>

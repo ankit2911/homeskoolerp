@@ -50,7 +50,17 @@ function SessionGrid({ sessions, onEdit, onAddLog }: { sessions: Session[]; onEd
     const [isPending, startTransition] = useTransition();
 
     if (sessions.length === 0) {
-        return <div className="text-center py-10 text-muted-foreground">No sessions found.</div>;
+        return (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-muted/20 rounded-lg border border-dashed">
+                <Calendar className="h-12 w-12 text-muted-foreground/40" />
+                <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground">No sessions planned yet</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                        Create your first session using the button above.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     const handleStart = (e: React.MouseEvent, session: Session) => {
@@ -130,7 +140,17 @@ function SessionGrid({ sessions, onEdit, onAddLog }: { sessions: Session[]; onEd
 // List View
 function SessionList({ sessions, onEdit }: { sessions: Session[]; onEdit: (s: Session) => void }) {
     if (sessions.length === 0) {
-        return <div className="text-center py-10 text-muted-foreground">No sessions found.</div>;
+        return (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-muted/20 rounded-lg border border-dashed">
+                <List className="h-12 w-12 text-muted-foreground/40" />
+                <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground">No sessions to display</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                        Sessions will appear here once scheduled.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -454,12 +474,24 @@ export function SessionsView({
 
     return (
         <div className="space-y-4">
-            {/* Compact Stats */}
-            <div className="grid grid-cols-4 gap-2">
-                <div className="rounded-lg p-2 text-center bg-gray-100"><div className="text-lg font-bold">{stats.total}</div><div className="text-[10px]">Total</div></div>
-                <div className="rounded-lg p-2 text-center bg-blue-100 text-blue-700"><div className="text-lg font-bold">{stats.scheduled}</div><div className="text-[10px]">Scheduled</div></div>
-                <div className="rounded-lg p-2 text-center bg-orange-100 text-orange-700"><div className="text-lg font-bold">{stats.inProgress}</div><div className="text-[10px]">In Progress</div></div>
-                <div className="rounded-lg p-2 text-center bg-green-100 text-green-700"><div className="text-lg font-bold">{stats.completed}</div><div className="text-[10px]">Completed</div></div>
+            {/* Stats Overview */}
+            <div className="grid grid-cols-4 gap-3">
+                <div className="rounded-xl p-3 text-center bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/50 shadow-sm">
+                    <div className="text-2xl font-bold text-slate-700">{stats.total}</div>
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wide">Total</div>
+                </div>
+                <div className="rounded-xl p-3 text-center bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 shadow-sm">
+                    <div className="text-2xl font-bold text-blue-700">{stats.scheduled}</div>
+                    <div className="text-[10px] text-blue-600/70 uppercase tracking-wide">Scheduled</div>
+                </div>
+                <div className="rounded-xl p-3 text-center bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/50 shadow-sm">
+                    <div className="text-2xl font-bold text-orange-600">{stats.inProgress}</div>
+                    <div className="text-[10px] text-orange-500/70 uppercase tracking-wide">In Progress</div>
+                </div>
+                <div className="rounded-xl p-3 text-center bg-gradient-to-br from-emerald-50 to-green-50 border border-green-200/50 shadow-sm">
+                    <div className="text-2xl font-bold text-green-700">{stats.completed}</div>
+                    <div className="text-[10px] text-green-600/70 uppercase tracking-wide">Completed</div>
+                </div>
             </div>
 
             {/* Filters */}

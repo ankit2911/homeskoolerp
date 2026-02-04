@@ -324,7 +324,7 @@ export function SessionForm({
                     <Separator />
 
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="grid gap-2">
+                        <div className="grid gap-1.5">
                             <Label className="text-xs">Board <span className="text-red-500">*</span></Label>
                             <Select value={boardId} onValueChange={handleBoardChange}>
                                 <SelectTrigger className="h-9">
@@ -336,6 +336,7 @@ export function SessionForm({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <p className="text-[10px] text-muted-foreground/70">Choose the curriculum board</p>
                         </div>
 
                         <div className="grid gap-2">
@@ -356,10 +357,10 @@ export function SessionForm({
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="grid gap-2">
+                        <div className="grid gap-1.5">
                             <Label className="text-xs">Subject <span className="text-red-500">*</span></Label>
                             <Select value={subjectId} onValueChange={handleSubjectChange} disabled={!classId}>
-                                <SelectTrigger className="h-9">
+                                <SelectTrigger className={`h-9 ${!classId ? 'opacity-50' : ''}`}>
                                     <SelectValue placeholder={classId ? "Select Subject" : "Select Class first"} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -368,6 +369,7 @@ export function SessionForm({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {subjectId && <p className="text-[10px] text-muted-foreground/70">Teacher will be auto-assigned if allocated</p>}
                         </div>
 
                         <div className="grid gap-2">
