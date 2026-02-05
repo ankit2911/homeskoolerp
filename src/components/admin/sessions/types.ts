@@ -90,4 +90,8 @@ export type BulkSessionPreview = BulkSessionInput & {
     title: string;
     endTime: string;
     teacherName: string;
+    calendarWarning?: {
+        type: string;
+        title: string;
+    };
 };

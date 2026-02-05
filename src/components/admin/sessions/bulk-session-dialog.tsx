@@ -34,7 +34,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
     Calendar, Clock, BookOpen, Layers, User, Trash2,
-    Plus, Loader2, CheckCircle2, AlertCircle, Repeat
+    Plus, Loader2, CheckCircle2, AlertCircle, Repeat, AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -53,6 +53,7 @@ type BulkSessionFormProps = {
     boards: BoardType[];
     teachers: TeacherType[];
     allocations: AllocationType[];
+    operatingSchedule?: any;
 };
 
 const DURATION_OPTIONS = [
@@ -73,10 +74,13 @@ const WEEKDAYS = [
     { key: 'sun', label: 'Sun' },
 ];
 
-export function BulkSessionDialog({ classes, boards, teachers, allocations }: BulkSessionFormProps) {
+export function BulkSessionDialog({ classes, boards, teachers, allocations, operatingSchedule }: BulkSessionFormProps) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'config' | 'preview' | 'success'>('config');
     const [isPending, startTransition] = useTransition();
+
+    // Default duration
+    const defaultDuration = operatingSchedule?.defaultPeriodDuration || 60;
 
     // Base config
     const [boardId, setBoardId] = useState('');
@@ -84,7 +88,7 @@ export function BulkSessionDialog({ classes, boards, teachers, allocations }: Bu
     const [subjectId, setSubjectId] = useState('');
     const [chapterId, setChapterId] = useState('');
     const [topicId, setTopicId] = useState('');
-    const [duration, setDuration] = useState(60);
+    const [duration, setDuration] = useState(defaultDuration);
     const [teacherId, setTeacherId] = useState('');
 
     // Repeat mode
@@ -421,6 +425,11 @@ export function BulkSessionDialog({ classes, boards, teachers, allocations }: Bu
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {duration !== defaultDuration && (
+                                            <div className="text-[10px] text-amber-600 flex items-center gap-1 mt-1">
+                                                ⚠️ Differs from school default ({defaultDuration} min)
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -617,12 +626,26 @@ export function BulkSessionDialog({ classes, boards, teachers, allocations }: Bu
                                             <TableRow key={p.id}>
                                                 <TableCell className="py-2 text-xs text-muted-foreground">{idx + 1}</TableCell>
                                                 <TableCell className="py-2">
-                                                    <div className="text-xs font-medium">
-                                                        {new Date(p.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="flex-1">
+                                                            <div className="text-xs font-medium">
+                                                                {new Date(p.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                            </div>
+                                                            <div className="text-[10px] text-muted-foreground">
+                                                                {new Date(p.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} • {p.duration}min
+                                                            </div>
+                                                        </div>
+                                                        {p.calendarWarning && (
+                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" title={`${p.calendarWarning.type}: ${p.calendarWarning.title}`}>
+                                                                <AlertTriangle className="h-3 w-3" />
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="text-[10px] text-muted-foreground">
-                                                        {new Date(p.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} • {p.duration}min
-                                                    </div>
+                                                    {p.calendarWarning && (
+                                                        <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                                                            ⚠ {p.calendarWarning.title}
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="py-2">
                                                     <div className="text-xs font-medium">{p.subjectName}</div>

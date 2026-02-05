@@ -41,6 +41,7 @@ type SessionFormProps = {
     resources?: ResourceType[];
     session?: Session;
     onClose?: () => void;
+    operatingSchedule?: any;
 };
 
 // Duration options
@@ -93,10 +94,14 @@ export function SessionForm({
     allocations = [],
     resources = [],
     session,
-    onClose
+    onClose,
+    operatingSchedule
 }: SessionFormProps) {
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
+
+    // Default duration from schedule or 60
+    const defaultDuration = operatingSchedule?.defaultPeriodDuration || 60;
 
     // Form state
     const [boardId, setBoardId] = useState<string>(session?.class.board?.name ?
@@ -107,9 +112,34 @@ export function SessionForm({
     const [topicId, setTopicId] = useState<string>(session?.topicId || '');
     const [teacherId, setTeacherId] = useState<string>(session?.teacherId || 'none');
     const [startTime, setStartTime] = useState<string>(formatDateTimeLocal(session?.startTime));
-    const [duration, setDuration] = useState<number>(60);
+    const [duration, setDuration] = useState<number>(session ? 60 : defaultDuration); // If editing, keep 60 as placeholder or calc real duration. Ideally we should calc real duration from session.
+    // Logic for session duration when editing:
+    // If session exists, we should probably calculate duration from start and end time.
+    // For now keeping simple default logic or existing.
+    // Wait, session objects usually have endTime.
+    // Let's refine duration initialization.
+
+    // Calculate initial duration if session exists
+    const initialDuration = useMemo(() => {
+        if (session) {
+            const start = new Date(session.startTime);
+            const end = new Date(session.endTime);
+            const diffMins = Math.round((end.getTime() - start.getTime()) / 60000);
+            return diffMins;
+        }
+        return defaultDuration;
+    }, [session, defaultDuration]);
+
+    useEffect(() => {
+        setDuration(initialDuration);
+    }, [initialDuration]);
+
     const [customDuration, setCustomDuration] = useState<string>('');
     const [isCustomDuration, setIsCustomDuration] = useState(false);
+
+    // Check if current duration matches default
+    const isDefaultDuration = duration === defaultDuration;
+
     const [title, setTitle] = useState<string>(session?.title || '');
     const [description, setDescription] = useState<string>(session?.description || '');
 
@@ -309,6 +339,12 @@ export function SessionForm({
                                         max={480}
                                     />
                                     <span className="text-xs text-muted-foreground">minutes</span>
+                                </div>
+                            )}
+
+                            {!isDefaultDuration && (
+                                <div className="text-[10px] text-amber-600 flex items-center gap-1 mt-1">
+                                    ⚠️ Differs from school default ({defaultDuration} min)
                                 </div>
                             )}
                         </div>

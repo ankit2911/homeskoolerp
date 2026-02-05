@@ -247,3 +247,24 @@ model Notification {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model SchoolOperatingSchedule {
+  id                    String   @id @default(cuid())
+  workingDays           String   // JSON array: ["MON","TUE","WED","THU","FRI"]
+  schoolStartTime       String   // 24-hour format: "08:00"
+  schoolEndTime         String   // 24-hour format: "15:30"
+  defaultPeriodDuration Int      // Duration in minutes (e.g., 45)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model AcademicCalendarEntry {
+  id          String    @id @default(cuid())
+  date        DateTime  // Start date (for single day or range start)
+  endDate     DateTime? // Optional: for date ranges
+  type        String    // HOLIDAY, SCHOOL_EVENT, EXAM_DAY, HALF_DAY
+  title       String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

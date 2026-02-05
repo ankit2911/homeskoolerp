@@ -46,6 +46,20 @@ export async function generateBulkSessionPreview(
             select: { id: true, firstName: true, lastName: true }
         });
 
+        // Collect all session dates for conflict checking
+        const sessionDates = sessions.map(s => s.startTime);
+
+        // Check for calendar conflicts
+        const { checkDateConflicts } = await import('@/lib/actions/academic-calendar');
+        const conflicts = await checkDateConflicts(sessionDates);
+
+        // Create a map of date -> conflict for quick lookup
+        const conflictMap = new Map<string, { type: string; title: string }>();
+        for (const conflict of conflicts) {
+            const dateKey = new Date(conflict.date).toISOString().split('T')[0];
+            conflictMap.set(dateKey, conflict.entry);
+        }
+
         const previews: BulkSessionPreview[] = sessions.map((s, idx) => {
             const start = new Date(s.startTime);
             const end = new Date(start.getTime() + s.duration * 60000);
@@ -61,12 +75,17 @@ export async function generateBulkSessionPreview(
             const teacher = s.teacherId ? teachers.find(t => t.id === s.teacherId) : null;
             const teacherName = teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unassigned';
 
+            // Check if this session's date has a calendar conflict
+            const dateKey = start.toISOString().split('T')[0];
+            const calendarWarning = conflictMap.get(dateKey);
+
             return {
                 ...s,
                 id: `preview-${idx}`,
                 title,
                 endTime: end.toISOString(),
-                teacherName
+                teacherName,
+                calendarWarning
             };
         });
 
@@ -75,6 +94,7 @@ export async function generateBulkSessionPreview(
         return { success: false, error: error.message };
     }
 }
+
 
 /**
  * Creates multiple sessions in a single transaction.

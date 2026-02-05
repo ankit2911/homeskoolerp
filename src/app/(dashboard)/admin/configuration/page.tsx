@@ -1,5 +1,9 @@
 import { db } from '@/lib/db';
 import { ConfigurationList } from '@/components/admin/configuration-list';
+import { OperatingScheduleCard } from '@/components/admin/operating-schedule-card';
+import { AcademicCalendarSection } from '@/components/admin/academic-calendar-section';
+import { getOperatingSchedule } from '@/lib/actions/operating-schedule';
+import { getCalendarEntries } from '@/lib/actions/academic-calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,43 +15,50 @@ export default async function ConfigurationPage({
     const params = await searchParams;
     const initialAction = typeof params.action === 'string' ? params.action : undefined;
 
-    const boards = await db.board.findMany({
-        include: {
-            classes: {
-                include: {
-                    subjects: {
-                        where: {
-                            subjectMaster: {
-                                isActive: true
+    const [boards, subjectMasters, operatingSchedule, calendarEntries] = await Promise.all([
+        db.board.findMany({
+            include: {
+                classes: {
+                    include: {
+                        subjects: {
+                            where: {
+                                subjectMaster: {
+                                    isActive: true
+                                }
                             }
-                        }
-                    },
-                    _count: { select: { students: true } }
+                        },
+                        _count: { select: { students: true } }
+                    }
                 }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
-
-    const subjectMasters = await db.subjectMaster.findMany({
-        select: {
-            id: true,
-            name: true,
-            code: true,
-            category: true,
-            isActive: true
-        },
-        orderBy: { name: 'asc' }
-    });
+            },
+            orderBy: { name: 'asc' }
+        }),
+        db.subjectMaster.findMany({
+            select: {
+                id: true,
+                name: true,
+                code: true,
+                category: true,
+                isActive: true
+            },
+            orderBy: { name: 'asc' }
+        }),
+        getOperatingSchedule(),
+        getCalendarEntries()
+    ]);
 
     return (
         <div className="space-y-6 pb-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
-                    <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">Academic Configuration</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Manage educational boards, classes, and subjects in a centralized hierarchy.</p>
+                    <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">School Configuration</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Manage school operating schedule, calendar, boards, classes, and subjects.</p>
                 </div>
             </div>
+
+            <OperatingScheduleCard initialData={operatingSchedule} />
+
+            <AcademicCalendarSection entries={JSON.parse(JSON.stringify(calendarEntries))} />
 
             <ConfigurationList
                 boards={JSON.parse(JSON.stringify(boards))}

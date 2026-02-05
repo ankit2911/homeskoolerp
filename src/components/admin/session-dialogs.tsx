@@ -23,9 +23,10 @@ type DialogProps = {
     teachers: TeacherType[];
     allocations: AllocationType[];
     resources: ResourceType[];
+    operatingSchedule: any;
 };
 
-export function CreateSessionDialog({ classes, boards, teachers, allocations, resources }: DialogProps) {
+export function CreateSessionDialog({ classes, boards, teachers, allocations, resources, operatingSchedule }: DialogProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -49,6 +50,7 @@ export function CreateSessionDialog({ classes, boards, teachers, allocations, re
                     allocations={allocations}
                     resources={resources}
                     onClose={() => setOpen(false)}
+                    operatingSchedule={operatingSchedule}
                 />
             </DialogContent>
         </Dialog>
@@ -63,7 +65,8 @@ export function EditSessionDialog({
     resources,
     session,
     open,
-    onOpenChange
+    onOpenChange,
+    operatingSchedule
 }: DialogProps & {
     session: Session;
     open: boolean;
@@ -86,6 +89,7 @@ export function EditSessionDialog({
                     resources={resources}
                     session={session as any}
                     onClose={() => onOpenChange(false)}
+                    operatingSchedule={operatingSchedule}
                 />
             </DialogContent>
         </Dialog>

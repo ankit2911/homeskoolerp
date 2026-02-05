@@ -24,7 +24,8 @@ export function SessionsPageClient({
     teachers,
     allocations,
     students,
-    resources
+    resources,
+    operatingSchedule
 }: {
     sessions: Session[];
     boards: BoardType[];
@@ -33,6 +34,7 @@ export function SessionsPageClient({
     allocations: AllocationType[];
     students: StudentType[];
     resources: ResourceType[];
+    operatingSchedule: any; // Using any to avoid complex type imports for now, or define minimal type
 }) {
     const [editingSession, setEditingSession] = useState<Session | null>(null);
     const [loggingSession, setLoggingSession] = useState<Session | null>(null);
@@ -55,6 +57,7 @@ export function SessionsPageClient({
                         boards={boards}
                         teachers={teachers}
                         allocations={allocations}
+                        operatingSchedule={operatingSchedule}
                     />
                     <CreateSessionDialog
                         classes={classes}
@@ -62,6 +65,7 @@ export function SessionsPageClient({
                         teachers={teachers}
                         allocations={allocations}
                         resources={resources}
+                        operatingSchedule={operatingSchedule}
                     />
                 </div>
             </div>
@@ -84,6 +88,7 @@ export function SessionsPageClient({
                     session={editingSession}
                     open={!!editingSession}
                     onOpenChange={(open) => !open && setEditingSession(null)}
+                    operatingSchedule={operatingSchedule}
                 />
             )}
 

@@ -16,7 +16,7 @@ const sidebarGroups = [
     {
         label: 'Academic',
         items: [
-            { href: '/admin/configuration', label: 'Academic Config', icon: Settings2 },
+            { href: '/admin/configuration', label: 'School Settings', icon: Settings2 },
             { href: '/admin/curriculum', label: 'Curriculum', icon: BookOpen },
             { href: '/admin/resources', label: 'Resources', icon: FileText },
         ]

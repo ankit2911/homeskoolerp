@@ -83,6 +83,10 @@ export default async function SessionsPage() {
         }
     });
 
+    // Fetch operating schedule
+    const { getOperatingSchedule } = await import('@/lib/actions/operating-schedule');
+    const operatingSchedule = await getOperatingSchedule();
+
     // Serialize for client
     const sessions = JSON.parse(JSON.stringify(sessionsData));
     const boards = JSON.parse(JSON.stringify(boardsData));
@@ -91,6 +95,7 @@ export default async function SessionsPage() {
     const allocations = JSON.parse(JSON.stringify(allocationsData));
     const students = JSON.parse(JSON.stringify(studentsData));
     const resources = JSON.parse(JSON.stringify(resourcesData));
+    const schedule = JSON.parse(JSON.stringify(operatingSchedule));
 
     return (
         <SessionsPageClient
@@ -101,6 +106,7 @@ export default async function SessionsPage() {
             allocations={allocations}
             students={students}
             resources={resources}
+            operatingSchedule={schedule}
         />
     );
 }
