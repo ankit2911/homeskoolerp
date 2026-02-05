@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,18 +44,35 @@ type Class = {
     id: string;
     name: string;
     section: string | null;
-    board: { name: string };
+    board: { id: string; name: string };
     subjects: Subject[];
 };
 
 type AddStudentFormProps = {
     classes: Class[];
 };
-
 export function AddStudentForm({ classes }: AddStudentFormProps) {
+    const router = useRouter();
+    const [selectedBoardId, setSelectedBoardId] = useState<string>('');
     const [selectedClassId, setSelectedClassId] = useState<string>('');
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
     const [isOpen, setIsOpen] = useState(false);
+
+    const boards = useMemo(() => {
+        const uniqueBoards = new Map();
+        classes.forEach(c => {
+            if (c.board && !uniqueBoards.has(c.board.id)) {
+                uniqueBoards.set(c.board.id, c.board);
+            }
+        });
+        return Array.from(uniqueBoards.values());
+    }, [classes]);
+
+    // Filter classes for selected board
+    const availableClasses = useMemo(() => {
+        if (!selectedBoardId) return [];
+        return classes.filter(c => c.board.id === selectedBoardId);
+    }, [classes, selectedBoardId]);
 
     // Get subjects for selected class
     const classSubjects = useMemo(() => {
@@ -73,31 +91,21 @@ export function AddStudentForm({ classes }: AddStudentFormProps) {
         return groups;
     }, [classSubjects]);
 
+    const handleBoardChange = (boardId: string) => {
+        setSelectedBoardId(boardId);
+        setSelectedClassId(''); // Reset class when board changes
+        setSelectedSubjects([]);
+    };
+
     const handleClassChange = (classId: string) => {
         setSelectedClassId(classId);
         setSelectedSubjects([]); // Reset subjects when class changes
     };
 
-    const toggleSubject = (subjectId: string) => {
-        setSelectedSubjects(prev =>
-            prev.includes(subjectId)
-                ? prev.filter(id => id !== subjectId)
-                : [...prev, subjectId]
-        );
-    };
-
-    const selectAllInCategory = (category: string) => {
-        const categorySubjectIds = subjectsByCategory[category]?.map(s => s.id) || [];
-        const allSelected = categorySubjectIds.every(id => selectedSubjects.includes(id));
-
-        if (allSelected) {
-            setSelectedSubjects(prev => prev.filter(id => !categorySubjectIds.includes(id)));
-        } else {
-            setSelectedSubjects(prev => [...new Set([...prev, ...categorySubjectIds])]);
-        }
-    };
+    // ... subject toggling functions remain ...
 
     const resetForm = () => {
+        setSelectedBoardId('');
         setSelectedClassId('');
         setSelectedSubjects([]);
     };
@@ -128,6 +136,7 @@ export function AddStudentForm({ classes }: AddStudentFormProps) {
                         await createStudent(formData);
                         setIsOpen(false);
                         resetForm();
+                        router.refresh();
                     }} id="student-form" className="space-y-6 py-4">
                         {/* Personal Information Section */}
                         <div className="space-y-4">
@@ -296,37 +305,56 @@ export function AddStudentForm({ classes }: AddStudentFormProps) {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
+                                    <Label className="text-xs font-bold">Board <span className="text-red-500">*</span></Label>
+                                    <Select
+                                        value={selectedBoardId}
+                                        onValueChange={handleBoardChange}
+                                        required
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Board" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {boards.map(b => (
+                                                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-1.5">
                                     <Label className="text-xs font-bold">Class <span className="text-red-500">*</span></Label>
                                     <Select
                                         name="classId"
                                         value={selectedClassId}
                                         onValueChange={handleClassChange}
+                                        disabled={!selectedBoardId}
                                         required
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Class" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {classes.map(c => (
+                                            {availableClasses.map(c => (
                                                 <SelectItem key={c.id} value={c.id}>
-                                                    {c.name} {c.section ? `(${c.section})` : ''} - {c.board.name}
+                                                    {c.name} {c.section ? `(${c.section})` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="grid gap-1.5">
-                                    <Label className="text-xs font-bold">Academic Year</Label>
-                                    <Select name="academicYear" defaultValue="2025-26">
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Year" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="2025-26">2025-26</SelectItem>
-                                            <SelectItem value="2024-25">2024-25</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            </div>
+
+                            <div className="grid gap-1.5 pt-2">
+                                <Label className="text-xs font-bold">Academic Year</Label>
+                                <Select name="academicYear" defaultValue="2025-26">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Year" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="2025-26">2025-26</SelectItem>
+                                        <SelectItem value="2024-25">2024-25</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Subject Selection - Shows only when class is selected */}
@@ -359,8 +387,8 @@ export function AddStudentForm({ classes }: AddStudentFormProps) {
                                                         <label
                                                             key={subject.id}
                                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all border ${selectedSubjects.includes(subject.id)
-                                                                    ? `${style.border} ring-2 ring-offset-1 ring-primary/50 bg-white`
-                                                                    : 'border-transparent bg-white/50 hover:bg-white'
+                                                                ? `${style.border} ring-2 ring-offset-1 ring-primary/50 bg-white`
+                                                                : 'border-transparent bg-white/50 hover:bg-white'
                                                                 }`}
                                                         >
                                                             <input

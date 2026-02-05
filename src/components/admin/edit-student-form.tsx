@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,7 +44,7 @@ type Class = {
     id: string;
     name: string;
     section: string | null;
-    board: { name: string };
+    board: { id: string; name: string };
     subjects: Subject[];
 };
 
@@ -84,9 +85,45 @@ type EditStudentFormProps = {
 
 export function EditStudentForm({ student, classes, enrolledSubjectIds = [] }: EditStudentFormProps) {
     const profile = student.studentProfile;
+    const router = useRouter();
+    // Derive initial board ID from the student's class
+    const initialBoardId = useMemo(() => {
+        if (profile?.classId) {
+            const cls = classes.find(c => c.id === profile.classId);
+            return cls?.board.id || '';
+        }
+        return '';
+    }, [classes, profile?.classId]);
+
+    const [selectedBoardId, setSelectedBoardId] = useState<string>(initialBoardId);
     const [selectedClassId, setSelectedClassId] = useState<string>(profile?.classId || '');
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>(enrolledSubjectIds);
     const [isOpen, setIsOpen] = useState(false);
+
+    // Extract unique boards from classes
+    const boards = useMemo(() => {
+        const uniqueBoards = new Map();
+        classes.forEach(c => {
+            if (c.board && !uniqueBoards.has(c.board.id)) {
+                uniqueBoards.set(c.board.id, c.board);
+            }
+        });
+        return Array.from(uniqueBoards.values());
+    }, [classes]);
+
+    // Filter classes for selected board
+    const availableClasses = useMemo(() => {
+        if (!selectedBoardId) return [];
+        return classes.filter(c => c.board.id === selectedBoardId);
+    }, [classes, selectedBoardId]);
+
+    // Update selectedBoardID if profile class loads later or changes externally (unlikely but good practice)
+    useEffect(() => {
+        if (profile?.classId && !selectedBoardId) {
+            const cls = classes.find(c => c.id === profile.classId);
+            if (cls) setSelectedBoardId(cls.board.id);
+        }
+    }, [profile?.classId, classes, selectedBoardId]);
 
     // Get subjects for selected class
     const classSubjects = useMemo(() => {
@@ -104,6 +141,12 @@ export function EditStudentForm({ student, classes, enrolledSubjectIds = [] }: E
         });
         return groups;
     }, [classSubjects]);
+
+    const handleBoardChange = (boardId: string) => {
+        setSelectedBoardId(boardId);
+        setSelectedClassId(''); // Reset class
+        setSelectedSubjects([]);
+    };
 
     const handleClassChange = (classId: string) => {
         setSelectedClassId(classId);
@@ -162,6 +205,7 @@ export function EditStudentForm({ student, classes, enrolledSubjectIds = [] }: E
                         });
                         await updateStudent(formData);
                         setIsOpen(false);
+                        router.refresh();
                     }} id={`edit-student-form-${student.id}`} className="space-y-6 py-4">
                         <input type="hidden" name="id" value={student.id} />
 
@@ -322,37 +366,56 @@ export function EditStudentForm({ student, classes, enrolledSubjectIds = [] }: E
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
+                                    <Label className="text-xs font-bold">Board <span className="text-red-500">*</span></Label>
+                                    <Select
+                                        value={selectedBoardId}
+                                        onValueChange={handleBoardChange}
+                                        required
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Board" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {boards.map(b => (
+                                                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-1.5">
                                     <Label className="text-xs font-bold">Class <span className="text-red-500">*</span></Label>
                                     <Select
                                         name="classId"
                                         value={selectedClassId}
                                         onValueChange={handleClassChange}
+                                        disabled={!selectedBoardId}
                                         required
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Class" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {classes.map(c => (
+                                            {availableClasses.map(c => (
                                                 <SelectItem key={c.id} value={c.id}>
-                                                    {c.name} {c.section ? `(${c.section})` : ''} - {c.board.name}
+                                                    {c.name} {c.section ? `(${c.section})` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="grid gap-1.5">
-                                    <Label className="text-xs font-bold">Academic Year</Label>
-                                    <Select name="academicYear" defaultValue={profile?.academicYear || '2025-26'}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Year" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="2025-26">2025-26</SelectItem>
-                                            <SelectItem value="2024-25">2024-25</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            </div>
+
+                            <div className="grid gap-1.5 pt-2">
+                                <Label className="text-xs font-bold">Academic Year</Label>
+                                <Select name="academicYear" defaultValue={profile?.academicYear || '2025-26'}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Year" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="2025-26">2025-26</SelectItem>
+                                        <SelectItem value="2024-25">2024-25</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Subject Selection */}

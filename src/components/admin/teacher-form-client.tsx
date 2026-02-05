@@ -45,7 +45,10 @@ type AddTeacherFormProps = {
     subjectMasters: SubjectMaster[];
 };
 
+import { useRouter } from 'next/navigation';
+
 export function AddTeacherForm({ subjectMasters }: AddTeacherFormProps) {
+    const router = useRouter();
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
     const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -122,6 +125,7 @@ export function AddTeacherForm({ subjectMasters }: AddTeacherFormProps) {
                         await createTeacher(formData);
                         setIsOpen(false);
                         resetForm();
+                        router.refresh();
                     }} id="teacher-form" className="space-y-6 py-4">
                         {/* Personal Information Section */}
                         <div className="space-y-4">
@@ -235,8 +239,8 @@ export function AddTeacherForm({ subjectMasters }: AddTeacherFormProps) {
                                                         <label
                                                             key={subject.id}
                                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all border ${selectedSubjects.includes(subject.name)
-                                                                    ? `${style.border} ring-2 ring-offset-1 ring-primary/50 bg-white`
-                                                                    : 'border-transparent bg-white/50 hover:bg-white'
+                                                                ? `${style.border} ring-2 ring-offset-1 ring-primary/50 bg-white`
+                                                                : 'border-transparent bg-white/50 hover:bg-white'
                                                                 }`}
                                                         >
                                                             <input
@@ -266,8 +270,8 @@ export function AddTeacherForm({ subjectMasters }: AddTeacherFormProps) {
                                         <label
                                             key={group}
                                             className={`flex items-center gap-2 border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${selectedClasses.includes(group)
-                                                    ? 'border-primary ring-2 ring-primary/30 bg-primary/5'
-                                                    : 'hover:bg-muted/50'
+                                                ? 'border-primary ring-2 ring-primary/30 bg-primary/5'
+                                                : 'hover:bg-muted/50'
                                                 }`}
                                         >
                                             <input
