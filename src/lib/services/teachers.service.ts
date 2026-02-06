@@ -6,11 +6,7 @@ export const teachersService = {
      */
     async getAllTeachers() {
         return await db.teacherProfile.findMany({
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                specialization: true,
+            include: {
                 user: { select: { id: true, name: true, email: true } }
             },
             orderBy: { firstName: 'asc' }

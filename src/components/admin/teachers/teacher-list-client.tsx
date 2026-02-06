@@ -28,23 +28,23 @@ import { AddTeacherForm } from '@/components/admin/teacher-form-client';
 import { DeleteConfirm } from '@/components/admin/delete-confirm';
 import { deleteTeacher } from '@/lib/actions/teacher';
 
-type Teacher = {
+type TeacherProfile = {
     id: string;
-    name: string | null;
-    email: string;
-    teacherProfile: {
-        firstName: string | null;
-        lastName: string | null;
-        phoneCode: string | null;
-        phoneNumber: string | null;
-        qualification: string | null;
-        experience: number | null;
-        specialization: string | null;
-        classes: string | null;
-        licenseNumber: string | null;
-        previousInstitutions: string | null;
-    } | null;
-    [key: string]: any;
+    firstName: string | null;
+    lastName: string | null;
+    phoneCode: string | null;
+    phoneNumber: string | null;
+    qualification: string | null;
+    experience: number | null;
+    specialization: string | null;
+    classes: string | null;
+    licenseNumber: string | null;
+    previousInstitutions: string | null;
+    user: {
+        id: string;
+        name: string | null;
+        email: string;
+    };
 };
 
 type Board = {
@@ -60,9 +60,9 @@ type SubjectMaster = {
 };
 
 type TeacherListClientProps = {
-    initialTeachers: Teacher[];
+    initialTeachers: TeacherProfile[];
     boards: Board[];
-    subjects: SubjectMaster[]; // Using SubjectMaster type which matches our data
+    subjects: SubjectMaster[];
 };
 
 export function TeacherListClient({ initialTeachers, boards, subjects }: TeacherListClientProps) {
@@ -79,22 +79,22 @@ export function TeacherListClient({ initialTeachers, boards, subjects }: Teacher
             const terms = searchLower.split(' ').filter(t => t.length > 0);
 
             const searchableText = `
-                ${teacher.name || ''}
-                ${teacher.email || ''}
-                ${teacher.teacherProfile?.qualification || ''}
-                ${teacher.teacherProfile?.specialization || ''}
-                ${teacher.teacherProfile?.phoneNumber || ''}
+                ${teacher.user.name || ''}
+                ${teacher.user.email || ''}
+                ${teacher.qualification || ''}
+                ${teacher.specialization || ''}
+                ${teacher.phoneNumber || ''}
             `.toLowerCase();
 
             const matchesSearch = terms.length === 0 || terms.every(term => searchableText.includes(term));
 
             // Qualification Filter
             const matchesQualification = selectedQualification === 'all' ||
-                (teacher.teacherProfile?.qualification === selectedQualification);
+                (teacher.qualification === selectedQualification);
 
             // Specialization Filter
             const matchesSpecialization = selectedSpecialization === 'all' ||
-                (teacher.teacherProfile?.specialization?.toLowerCase() || '').includes(selectedSpecialization.toLowerCase());
+                (teacher.specialization?.toLowerCase() || '').includes(selectedSpecialization.toLowerCase());
 
             return matchesSearch && matchesQualification && matchesSpecialization;
         });
@@ -110,19 +110,15 @@ export function TeacherListClient({ initialTeachers, boards, subjects }: Teacher
     const uniqueQualifications = useMemo(() => {
         const quals = new Set<string>();
         initialTeachers.forEach(t => {
-            if (t.teacherProfile?.qualification) quals.add(t.teacherProfile.qualification);
+            if (t.qualification) quals.add(t.qualification);
         });
         return Array.from(quals).sort();
     }, [initialTeachers]);
 
-    // Get unique specializations (split by comma) for filter could be complex, 
-    // simply using the subjects passed as props is better or extracting from existing data.
-    // Let's use the passed subjects for the filter dropdown to align with data entry.
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                {/* Header Actions - Add Teacher Button moved here to align with other pages */}
+                {/* Header Actions */}
                 <div className="flex-1"></div>
                 <AddTeacherForm subjectMasters={subjects} />
             </div>
@@ -210,19 +206,19 @@ export function TeacherListClient({ initialTeachers, boards, subjects }: Teacher
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-gray-900 dark:text-white leading-tight">{teacher.name}</span>
+                                            <span className="font-bold text-gray-900 dark:text-white leading-tight">{teacher.user.name}</span>
                                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">
-                                                {teacher.teacherProfile?.qualification || 'N/A'}
+                                                {teacher.qualification || 'N/A'}
                                             </span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
                                             <Phone className="h-3 w-3 text-gray-400" />
-                                            {teacher.teacherProfile?.phoneNumber ? (
+                                            {teacher.phoneNumber ? (
                                                 <span className="tracking-tighter">
-                                                    {teacher.teacherProfile.phoneCode && <span className="mr-1 text-gray-400">{teacher.teacherProfile.phoneCode}</span>}
-                                                    {teacher.teacherProfile.phoneNumber}
+                                                    {teacher.phoneCode && <span className="mr-1 text-gray-400">{teacher.phoneCode}</span>}
+                                                    {teacher.phoneNumber}
                                                 </span>
                                             ) : (
                                                 <span className="text-gray-400 italic">N/A</span>
@@ -232,12 +228,12 @@ export function TeacherListClient({ initialTeachers, boards, subjects }: Teacher
                                     <TableCell>
                                         <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
                                             <Mail className="h-3 w-3 text-gray-400" />
-                                            <span className="truncate max-w-[150px]">{teacher.email}</span>
+                                            <span className="truncate max-w-[150px]">{teacher.user.email}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
-                                            {teacher.teacherProfile?.specialization?.split(',').map((s: string, i: number) => (
+                                            {teacher.specialization?.split(',').map((s: string, i: number) => (
                                                 <Badge key={i} variant="secondary" className="text-[10px] h-5 truncate max-w-[100px] bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100">
                                                     {s.trim()}
                                                 </Badge>
@@ -247,7 +243,7 @@ export function TeacherListClient({ initialTeachers, boards, subjects }: Teacher
                                     <TableCell>
                                         <div className="flex items-center gap-1">
                                             <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                                                {teacher.teacherProfile?.experience || 0}
+                                                {teacher.experience || 0}
                                             </span>
                                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">yr</span>
                                         </div>
@@ -255,11 +251,26 @@ export function TeacherListClient({ initialTeachers, boards, subjects }: Teacher
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <EditTeacherForm
-                                                teacher={JSON.parse(JSON.stringify(teacher))}
+                                                teacher={{
+                                                    id: teacher.user.id, // Transformed for EditForm: Use User ID
+                                                    email: teacher.user.email,
+                                                    teacherProfile: {
+                                                        firstName: teacher.firstName,
+                                                        lastName: teacher.lastName,
+                                                        phoneCode: teacher.phoneCode,
+                                                        phoneNumber: teacher.phoneNumber,
+                                                        qualification: teacher.qualification,
+                                                        experience: teacher.experience,
+                                                        specialization: teacher.specialization,
+                                                        classes: teacher.classes,
+                                                        licenseNumber: teacher.licenseNumber,
+                                                        previousInstitutions: teacher.previousInstitutions
+                                                    }
+                                                }}
                                                 subjectMasters={subjects}
                                             />
                                             <DeleteConfirm onDelete={async () => {
-                                                const res = await deleteTeacher(teacher.id);
+                                                const res = await deleteTeacher(teacher.user.id); // Delete by User ID
                                                 router.refresh();
                                                 return res;
                                             }} />
