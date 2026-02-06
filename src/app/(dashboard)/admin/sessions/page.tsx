@@ -1,87 +1,32 @@
-import { db } from '@/lib/db';
+import { sessionsService } from '@/lib/services/sessions.service';
+import { curriculumService } from '@/lib/services/curriculum.service';
+import { teachersService } from '@/lib/services/teachers.service';
+import { studentsService } from '@/lib/services/students.service';
 import { SessionsPageClient } from '@/components/admin/sessions/sessions-page-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SessionsPage() {
     // Fetch sessions with related data
-    const sessionsData = await db.session.findMany({
-        include: {
-            class: { include: { board: true } },
-            subject: true,
-            chapter: true,
-            teacher: true,
-        },
-        orderBy: { startTime: 'desc' },
-        take: 100
-    });
+    const sessionsData = await sessionsService.getSessions(100);
 
     // Fetch boards for form
-    const boardsData = await db.board.findMany({
-        select: { id: true, name: true },
-        orderBy: { name: 'asc' }
-    });
+    const boardsData = await curriculumService.getAllBoards();
 
-    // Fetch classes with hierarchy for forms
-    const classesData = await db.class.findMany({
-        include: {
-            board: true,
-            subjects: {
-                include: {
-                    chapters: {
-                        include: { topics: true },
-                        orderBy: { name: 'asc' }
-                    }
-                }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
+    // Fetch classes with hierarchy for forms (true = include hierarchy)
+    const classesData = await curriculumService.getAllClassesWithRelations();
 
     // Fetch teachers
-    const teachersData = await db.teacherProfile.findMany({
-        select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            specialization: true
-        },
-        orderBy: { firstName: 'asc' }
-    });
+    const teachersData = await teachersService.getAllTeachers();
 
     // Fetch teacher allocations for auto-population
-    const allocationsData = await db.teacherAllocation.findMany({
-        select: {
-            teacherId: true,
-            classId: true,
-            subjectId: true
-        }
-    });
+    const allocationsData = await teachersService.getAllAllocations();
 
     // Fetch students for session logs (grouped by classId)
-    const studentsData = await db.studentProfile.findMany({
-        select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            rollNumber: true,
-            classId: true
-        },
-        where: { status: 'ACTIVE' },
-        orderBy: { rollNumber: 'asc' }
-    });
+    const studentsData = await studentsService.getStudentsWithProfiles();
 
     // Fetch resources for mapping
-    const resourcesData = await db.resource.findMany({
-        select: {
-            id: true,
-            title: true,
-            type: true,
-            classId: true,
-            subjectId: true,
-            topicId: true
-        }
-    });
+    const resourcesData = await curriculumService.getAllResources();
 
     // Fetch operating schedule
     const { getOperatingSchedule } = await import('@/lib/actions/operating-schedule');

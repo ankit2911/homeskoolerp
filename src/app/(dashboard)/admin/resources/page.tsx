@@ -1,43 +1,13 @@
-import { db } from '@/lib/db';
+import { curriculumService } from '@/lib/services/curriculum.service';
 import { ResourcesClient } from '@/components/admin/resources-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ResourcesPage() {
-    const resources = await db.resource.findMany({
-        include: {
-            class: { include: { board: true } },
-            subject: true,
-            topic: { include: { chapter: true } },
-            files: true
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+    const resources = await curriculumService.getResourcesWithRelations();
 
     // Fetch boards with full hierarchy for topic selection
-    const boards = await db.board.findMany({
-        include: {
-            classes: {
-                orderBy: { name: 'asc' },
-                include: {
-                    subjects: {
-                        orderBy: { name: 'asc' },
-                        include: {
-                            chapters: {
-                                orderBy: { name: 'asc' },
-                                include: {
-                                    topics: {
-                                        orderBy: { name: 'asc' }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
+    const boards = await curriculumService.getBoardsWithHierarchy();
 
     // Serialize to plain objects
     const resourcesData = JSON.parse(JSON.stringify(resources));

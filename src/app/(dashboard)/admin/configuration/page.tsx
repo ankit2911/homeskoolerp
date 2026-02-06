@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { curriculumService } from '@/lib/services/curriculum.service';
 import { ConfigurationList } from '@/components/admin/configuration-list';
 import { OperatingScheduleCard } from '@/components/admin/operating-schedule-card';
 import { AcademicCalendarSection } from '@/components/admin/academic-calendar-section';
@@ -16,33 +16,8 @@ export default async function ConfigurationPage({
     const initialAction = typeof params.action === 'string' ? params.action : undefined;
 
     const [boards, subjectMasters, operatingSchedule, calendarEntries] = await Promise.all([
-        db.board.findMany({
-            include: {
-                classes: {
-                    include: {
-                        subjects: {
-                            where: {
-                                subjectMaster: {
-                                    isActive: true
-                                }
-                            }
-                        },
-                        _count: { select: { students: true } }
-                    }
-                }
-            },
-            orderBy: { name: 'asc' }
-        }),
-        db.subjectMaster.findMany({
-            select: {
-                id: true,
-                name: true,
-                code: true,
-                category: true,
-                isActive: true
-            },
-            orderBy: { name: 'asc' }
-        }),
+        curriculumService.getBoardsWithHierarchy(),
+        curriculumService.getAllSubjectMasters(),
         getOperatingSchedule(),
         getCalendarEntries()
     ]);

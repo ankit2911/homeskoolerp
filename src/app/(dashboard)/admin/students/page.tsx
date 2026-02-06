@@ -1,43 +1,31 @@
-import { db } from '@/lib/db';
+import { studentsService } from '@/lib/services/students.service';
+import { curriculumService } from '@/lib/services/curriculum.service';
 import { StudentListClient } from '@/components/admin/students/student-list-client';
-
 import { AddStudentForm } from '@/components/admin/student-form-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function StudentsPage() {
-    const studentsData = await db.user.findMany({
-        where: { role: 'STUDENT' },
-        include: {
-            studentProfile: {
-                include: {
-                    class: { include: { board: true } }
-                }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+    // Fetch students via service
+    const students = await studentsService.getStudentsWithProfiles();
 
-    const classesData = await db.class.findMany({
-        include: {
-            board: true,
-            subjects: {
-                include: { subjectMaster: true }
-            }
-        }
-    });
-
-    // Serialize for client component
-    const students = JSON.parse(JSON.stringify(studentsData));
-    const classes = JSON.parse(JSON.stringify(classesData));
+    // Fetch classes via service for filtering and forms
+    const classes = await curriculumService.getAllClassesWithRelations();
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">Students</h1>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Students</h1>
+                    <p className="text-sm text-muted-foreground">Manage student enrollments and profiles</p>
+                </div>
                 <AddStudentForm classes={classes} />
             </div>
-            <StudentListClient initialStudents={students} classes={classes} />
+
+            <StudentListClient
+                initialStudents={students}
+                classes={classes}
+            />
         </div>
     );
 }
