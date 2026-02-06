@@ -49,34 +49,39 @@ function isSameDay(d1: Date, d2: Date) {
 
 const CONFLICT_STYLES = {
     NO_TEACHER: {
-        border: 'border-red-300',
+        border: 'border-red-200',
         bg: 'bg-red-50',
+        bar: 'bg-red-500',
         icon: XCircle,
-        color: 'text-red-600'
+        color: 'text-red-700'
     },
     HOLIDAY: {
-        border: 'border-amber-300',
+        border: 'border-amber-200',
         bg: 'bg-amber-50',
+        bar: 'bg-amber-500',
         icon: AlertTriangle,
-        color: 'text-amber-600'
+        color: 'text-amber-700'
     },
     EXAM_DAY: {
-        border: 'border-amber-300',
+        border: 'border-amber-200',
         bg: 'bg-amber-50',
+        bar: 'bg-amber-500',
         icon: AlertTriangle,
-        color: 'text-amber-600'
+        color: 'text-amber-700'
     },
     OVERLAP: {
-        border: 'border-purple-300',
+        border: 'border-purple-200',
         bg: 'bg-purple-50',
+        bar: 'bg-purple-500',
         icon: AlertTriangle,
-        color: 'text-purple-600'
+        color: 'text-purple-700'
     },
     NONE: {
-        border: 'border-gray-200',
+        border: 'border-gray-100',
         bg: 'bg-white',
+        bar: 'bg-emerald-500',
         icon: CheckCircle2,
-        color: 'text-emerald-600'
+        color: 'text-emerald-700'
     }
 };
 
@@ -251,7 +256,7 @@ export function ScheduleCalendar({ sessions, teachers, boards, currentDate }: Sc
             </CardHeader>
             <CardContent className="p-0">
                 <ScrollArea className="h-[350px]">
-                    <div className="grid grid-cols-7 min-w-[700px]">
+                    <div className="grid grid-cols-7 gap-px text-xs bg-gray-200 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800 min-w-[700px]">
                         {/* Day Headers */}
                         {weekDays.map((day, idx) => {
                             const isToday = isSameDay(day, new Date());
@@ -259,14 +264,14 @@ export function ScheduleCalendar({ sessions, teachers, boards, currentDate }: Sc
                             return (
                                 <div
                                     key={day.toISOString()}
-                                    className={`p-2 text-center border-b border-r border-gray-100 dark:border-gray-800 ${isToday ? 'bg-primary/5' : ''} ${isWeekend ? 'bg-gray-50/50' : ''}`}
+                                    className={`p-2 text-center bg-white dark:bg-black/20 ${isToday ? '' : ''} ${isWeekend ? 'bg-gray-50/80 dark:bg-gray-900/40' : ''}`}
                                 >
-                                    <p className={`text-[10px] font-bold uppercase tracking-wider ${isToday ? 'text-primary' : 'text-gray-400'}`}>
+                                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isToday ? 'text-primary' : 'text-gray-400'}`}>
                                         {day.toLocaleDateString('en-US', { weekday: 'short' })}
                                     </p>
-                                    <p className={`text-lg font-black ${isToday ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
+                                    <div className={`text-lg font-black leading-none ${isToday ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
                                         {day.getDate()}
-                                    </p>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -280,14 +285,21 @@ export function ScheduleCalendar({ sessions, teachers, boards, currentDate }: Sc
                             return (
                                 <div
                                     key={`cell-${day.toISOString()}`}
-                                    className={`min-h-[200px] p-1.5 border-r border-gray-100 dark:border-gray-800 ${isToday ? 'bg-primary/5' : ''} ${isWeekend ? 'bg-gray-50/50' : ''}`}
+                                    className={`min-h-[140px] p-2 bg-white dark:bg-gray-950
+                                        ${isToday ? 'bg-primary/[0.02]' : ''}
+                                        ${isWeekend ? 'bg-gray-50/50 dark:bg-gray-900/20' : ''}
+                                    `}
                                 >
+                                    {isToday && (
+                                        <div className="h-0.5 w-full bg-primary/20 mb-2 rounded-full" />
+                                    )}
+
                                     {daySessions.length === 0 ? (
-                                        <div className="h-full flex items-center justify-center text-gray-300">
-                                            <span className="text-xs">No sessions</span>
+                                        <div className="h-full flex items-center justify-center">
+                                            <span className="text-[10px] text-gray-300 font-medium">No sessions</span>
                                         </div>
                                     ) : (
-                                        <div className="space-y-1.5">
+                                        <div className="space-y-2">
                                             {daySessions.map(session => {
                                                 const conflictStyle = session.hasConflict && session.conflictType
                                                     ? CONFLICT_STYLES[session.conflictType]
@@ -297,28 +309,35 @@ export function ScheduleCalendar({ sessions, teachers, boards, currentDate }: Sc
                                                 return (
                                                     <div
                                                         key={session.id}
-                                                        className={`p-2 rounded-lg border ${conflictStyle.border} ${conflictStyle.bg} transition-all hover:shadow-sm`}
+                                                        className={`relative group flex flex-col gap-0.5 p-2 pl-2.5 rounded shadow-sm border ${conflictStyle.border} bg-white dark:bg-gray-900 transition-all hover:shadow-md cursor-pointer overflow-hidden`}
                                                     >
-                                                        <div className="flex items-start justify-between gap-1 mb-1">
-                                                            <p className="text-[10px] font-bold text-gray-600 truncate">
+                                                        {/* Accent Strip */}
+                                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${conflictStyle.bar}`} />
+
+                                                        <div className="flex items-start justify-between gap-1">
+                                                            <p className="font-bold text-gray-700 dark:text-gray-300 truncate text-[11px] leading-tight">
                                                                 {session.subjectName}
                                                             </p>
                                                             {session.hasConflict && (
                                                                 <Icon className={`w-3 h-3 ${conflictStyle.color} shrink-0`} />
                                                             )}
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-[9px] text-gray-500">
-                                                            <Clock className="w-2.5 h-2.5" />
-                                                            <span>{formatTime(session.startTime)}</span>
+
+                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                            <div className="flex items-center gap-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                                                                <Clock className="w-2.5 h-2.5" />
+                                                                <span>{formatTime(session.startTime)}</span>
+                                                            </div>
                                                         </div>
+
                                                         {viewType === 'teacher' && (
-                                                            <p className="text-[9px] text-gray-400 mt-0.5 truncate">
+                                                            <p className="text-[10px] text-gray-400 mt-1 truncate pl-0.5">
                                                                 {session.className}{session.classSection ? ` ${session.classSection}` : ''}
                                                             </p>
                                                         )}
                                                         {viewType === 'class' && session.teacherName && (
-                                                            <p className="text-[9px] text-gray-400 mt-0.5 truncate">
-                                                                {session.teacherName}
+                                                            <p className="text-[10px] text-gray-400 mt-1 truncate pl-0.5">
+                                                                <span className="text-gray-300 mr-1">by</span>{session.teacherName}
                                                             </p>
                                                         )}
                                                     </div>
@@ -333,19 +352,23 @@ export function ScheduleCalendar({ sessions, teachers, boards, currentDate }: Sc
                 </ScrollArea>
 
                 {/* Legend */}
-                <div className="flex items-center gap-4 p-3 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-500">
+                <div className="flex flex-wrap items-center gap-4 p-3 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-500 bg-gray-50/30 dark:bg-gray-900/20">
                     <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded border border-gray-200 bg-white"></div>
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
                         <span>Assigned</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded border border-red-300 bg-red-50"></div>
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
                         <span>No Teacher</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded border border-amber-300 bg-amber-50"></div>
-                        <span>Calendar Conflict</span>
+                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <span>Holiday / Exam</span>
                     </div>
+                    {/* <div className="ml-auto text-gray-400 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>Work week view</span>
+                    </div> */}
                 </div>
             </CardContent>
         </Card>

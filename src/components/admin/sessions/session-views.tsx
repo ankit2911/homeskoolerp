@@ -222,23 +222,37 @@ function SessionCalendar({ sessions, onEdit }: { sessions: Session[]; onEdit: (s
         days.push(
             <div
                 key={day}
-                className={`h-20 p-1 rounded border text-xs cursor-pointer transition-colors
-                    ${isToday ? 'border-primary bg-primary/5' : 'border-muted/50'}
-                    ${isSelected ? 'ring-2 ring-primary' : ''}
-                    ${daySessions.length > 0 ? 'hover:bg-muted/30' : ''}
+                className={`min-h-[100px] p-2 rounded-lg border text-xs cursor-pointer transition-all relative group
+                    ${isToday ? 'bg-primary/[0.03] ring-1 ring-primary/30 border-primary/20' : 'bg-card border-border/40 hover:bg-muted/30 hover:border-border/80'}
+                    ${isSelected ? 'ring-2 ring-primary shadow-sm z-10' : ''}
                     overflow-hidden`}
                 onClick={() => daySessions.length > 0 && setSelectedDate(isSelected ? null : key)}
             >
-                <div className={`font-bold ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>{day}</div>
-                <div className="space-y-0.5 mt-0.5">
-                    {timeSlots.slice(0, 2).map(([time, count]) => (
-                        <div key={time} className="flex items-center justify-between text-[9px] px-1 bg-primary/10 text-primary rounded">
-                            <span>{time}</span>
-                            {count > 1 && <span className="bg-primary text-white px-1 rounded-full text-[8px]">{count}</span>}
+                {/* Header */}
+                <div className="flex justify-between items-start mb-2">
+                    <span className={`font-bold text-sm ${isToday ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                        {day}
+                    </span>
+                    {daySessions.length > 0 && (
+                        <Badge variant="secondary" className={`text-[9px] h-4 px-1 ${isToday ? 'bg-primary/10 text-primary' : ''}`}>
+                            {daySessions.length}
+                        </Badge>
+                    )}
+                </div>
+
+                {/* Session Chips */}
+                <div className="space-y-1">
+                    {timeSlots.slice(0, 3).map(([time, count]) => (
+                        <div key={time} className={`flex items-center gap-1.5 text-[10px] px-1.5 py-0.5 rounded-md w-full truncate border
+                            ${isToday ? 'bg-primary/10 text-primary border-primary/10' : 'bg-muted/30 text-muted-foreground border-transparent group-hover:bg-muted/50'}
+                        `}>
+                            <div className={`w-1 h-1 rounded-full ${isToday ? 'bg-primary' : 'bg-muted-foreground/50'}`}></div>
+                            <span className="font-medium">{time}</span>
+                            {count > 1 && <span className="text-[9px] opacity-70 ml-auto pl-1">x{count}</span>}
                         </div>
                     ))}
-                    {timeSlots.length > 2 && (
-                        <div className="text-[9px] text-muted-foreground text-center">+{timeSlots.length - 2} more</div>
+                    {timeSlots.length > 3 && (
+                        <div className="text-[9px] text-muted-foreground pl-1.5 font-medium">+{timeSlots.length - 3} more</div>
                     )}
                 </div>
             </div>
