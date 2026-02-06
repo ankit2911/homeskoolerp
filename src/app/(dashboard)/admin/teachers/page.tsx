@@ -1,7 +1,7 @@
 import { teachersService } from '@/lib/services/teachers.service';
 import { curriculumService } from '@/lib/services/curriculum.service';
 import { TeacherListClient } from '@/components/admin/teachers/teacher-list-client';
-import { EditTeacherForm } from '@/components/admin/edit-teacher-form';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -28,10 +28,7 @@ export default async function TeachersPage() {
                 subjects={subjects}
             />
 
-            <EditTeacherForm
-                boards={boards}
-                subjects={subjects}
-            />
+
         </div>
     );
 }
