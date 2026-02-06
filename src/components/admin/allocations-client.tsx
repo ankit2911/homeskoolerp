@@ -623,6 +623,7 @@ function BulkAllocationDialog({
     const [isOpen, setIsOpen] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState<string>('');
     const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+    const [selectedBoard, setSelectedBoard] = useState<string>('');
     const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [teacherSearch, setTeacherSearch] = useState('');
@@ -632,6 +633,7 @@ function BulkAllocationDialog({
         if (isOpen) {
             setSelectedSubject('');
             setSelectedTeacher('');
+            setSelectedBoard('');
             setSelectedClasses([]);
             setTeacherSearch('');
         }
@@ -644,18 +646,29 @@ function BulkAllocationDialog({
         return Array.from(subjects).sort();
     }, [boards]);
 
-    const filteredClasses = useMemo(() => {
+    // Get boards that have classes with the selected subject
+    const availableBoards = useMemo(() => {
         if (!selectedSubject) return [];
-        return boards.flatMap(b => b.classes
+        return boards.filter(b =>
+            b.classes.some(c => c.subjects.some(s => s.name === selectedSubject))
+        );
+    }, [boards, selectedSubject]);
+
+    // Filter classes by selected board AND subject
+    const filteredClasses = useMemo(() => {
+        if (!selectedSubject || !selectedBoard) return [];
+        const board = boards.find(b => b.id === selectedBoard);
+        if (!board) return [];
+
+        return board.classes
             .filter(c => c.subjects.some(s => s.name === selectedSubject))
             .map(c => ({
                 id: c.id,
                 name: c.section ? `${c.name} ${c.section}` : c.name,
-                boardName: b.name,
+                boardName: board.name,
                 subjectId: c.subjects.find(s => s.name === selectedSubject)?.id
-            }))
-        );
-    }, [boards, selectedSubject]);
+            }));
+    }, [boards, selectedSubject, selectedBoard]);
 
     const handleSave = async () => {
         if (!selectedTeacher || !selectedSubject || selectedClasses.length === 0) return;
@@ -744,10 +757,34 @@ function BulkAllocationDialog({
                             </div>
                         )}
 
-                        {/* Step 3: Select Classes */}
+                        {/* Step 3: Select Board */}
                         {selectedSubject && selectedTeacher && (
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700">3. Select Classes</label>
+                                <label className="text-sm font-bold text-gray-700">3. Select Board</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {availableBoards.map(board => (
+                                        <div
+                                            key={board.id}
+                                            onClick={() => {
+                                                setSelectedBoard(board.id);
+                                                setSelectedClasses([]); // Reset classes when board changes
+                                            }}
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold border cursor-pointer transition-all ${selectedBoard === board.id
+                                                ? 'bg-primary text-white border-primary shadow-sm'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:border-primary/50'
+                                                }`}
+                                        >
+                                            {board.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 4: Select Classes */}
+                        {selectedSubject && selectedTeacher && selectedBoard && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700">4. Select Classes</label>
                                 <div className="border rounded-md max-h-[150px] overflow-y-auto p-2 bg-gray-50 flex flex-wrap gap-2">
                                     {filteredClasses.length === 0 ? (
                                         <p className="text-sm text-gray-400 p-2">No classes found with {selectedSubject}</p>
