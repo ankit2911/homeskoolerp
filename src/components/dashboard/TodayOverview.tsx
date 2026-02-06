@@ -6,9 +6,10 @@ import type { TodayStats } from '@/lib/actions/dashboard';
 
 type TodayOverviewProps = {
     stats: TodayStats;
+    todayFormatted: string;
 };
 
-export function TodayOverview({ stats }: TodayOverviewProps) {
+export function TodayOverview({ stats, todayFormatted }: TodayOverviewProps) {
     const cards = [
         {
             label: 'Total Sessions',
@@ -60,7 +61,7 @@ export function TodayOverview({ stats }: TodayOverviewProps) {
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Today&apos;s Operations</h2>
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    {todayFormatted}
                 </span>
             </div>
             <div className="grid gap-3 grid-cols-2 md:grid-cols-5">

@@ -58,7 +58,10 @@ export default async function AdminDashboard() {
             </div>
 
             {/* Today's Operations Overview */}
-            <TodayOverview stats={stats} />
+            <TodayOverview
+                stats={stats}
+                todayFormatted={today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+            />
 
             {/* Flags & Activity Row */}
             <div className="grid gap-4 lg:grid-cols-2">

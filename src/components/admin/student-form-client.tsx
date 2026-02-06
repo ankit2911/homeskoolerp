@@ -102,7 +102,27 @@ export function AddStudentForm({ classes }: AddStudentFormProps) {
         setSelectedSubjects([]); // Reset subjects when class changes
     };
 
-    // ... subject toggling functions remain ...
+    const toggleSubject = (subjectId: string) => {
+        setSelectedSubjects(prev =>
+            prev.includes(subjectId)
+                ? prev.filter(id => id !== subjectId)
+                : [...prev, subjectId]
+        );
+    };
+
+    const selectAllInCategory = (category: string) => {
+        const categorySubjects = subjectsByCategory[category] || [];
+        const categoryIds = categorySubjects.map(s => s.id);
+        const allSelected = categoryIds.every(id => selectedSubjects.includes(id));
+
+        if (allSelected) {
+            // Deselect all in category
+            setSelectedSubjects(prev => prev.filter(id => !categoryIds.includes(id)));
+        } else {
+            // Select all in category
+            setSelectedSubjects(prev => [...new Set([...prev, ...categoryIds])]);
+        }
+    };
 
     const resetForm = () => {
         setSelectedBoardId('');
